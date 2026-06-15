@@ -1,0 +1,309 @@
+# =============================================================================
+# PROVISIONAL TRIAGE RULE SET (v0.1 DRAFT) — NEEDS CLINICAL SIGN-OFF
+# =============================================================================
+# Every value here is drafted from published pediatric standards (APLS, PEWS, the
+# Manchester Triage System) as a STARTING POINT for clinicians to red-line. It is
+# NOT validated clinical content and must not be used for any real triage.
+# Mock research data only. See docs/triage-rules-provisional.md for sources/notes.
+#
+# HOW THIS FILE WORKS (for clinician editors)
+#  - A rule fires only when ALL of its conditions (the items under `all:`) are true.
+#  - A case's color is the highest color among all rules that fire. Findings never add
+#    up (most-urgent-finding-wins). The "decisive" rule shown to the doctor is the
+#    highest-color rule that fired; if several share that color, the one listed FIRST
+#    in this file wins — so order matters: list the most dangerous first.
+#  - To change a threshold, just edit the number and save. To add a rule, copy an
+#    existing one. `label_sk` is the Slovak text the doctor sees in the explanation.
+#
+# CONDITION TYPES
+#  - vital:           { vital: <key>, op: lt|lte|gt|gte|eq, value: <number> }
+#  - vital_vs_band:   { vital_vs_band: hr|rr|diastolic_bp, bound: above_normal|below_normal, factor: <optional> }
+#                     (compares to the age band's normal range; factor scales the upper bound)
+#  - bp_below_band_min: true   (systolic BP below the band minimum, or 70 + 2×age[yrs])
+#  - discriminator:   { discriminator: <key>, state: present|absent|unknown }  (default present)
+#  - age:             { age: { op: lt|lte|gt|gte|eq, value: <number>, unit: days|months|years } }
+#
+# VITAL KEYS:        hr (bpm) · rr (/min) · spo2 (%) · temp (°C) · systolic_bp (mmHg)
+#                    · diastolic_bp (mmHg) · crt (capillary refill, s) · glucose (mmol/L)
+#
+# DISCRIMINATOR KEYS used below: avpu_unresponsive, apnoea, airway_compromise,
+#   active_seizure, central_cyanosis, non_blanching_rash, altered_consciousness,
+#   severe_resp_distress, moderate_resp_distress, severe_pain, moderate_pain,
+#   immunocompromised, significant_dehydration, moderate_dehydration
+# =============================================================================
+
+version: "0.1.0-draft"
+
+# Color used when no rule fires (minor complaint, normal vitals, no red flags).
+default_color: GREEN
+
+# Age bands and per-band normal vital windows. Values OUTSIDE these windows drive the
+# tachy/brady/tachypnea/diastolic-BP rules below. max_age_days is the inclusive upper bound
+# (checked ascending). min_systolic_bp overrides the 70 + 2×age formula where given.
+age_bands:
+  - name: neonate
+    label_sk: "Novorodenec (0–28 dní)"
+    max_age_days: 28
+    hr_normal: [100, 180]
+    rr_normal: [40, 60]
+    min_systolic_bp: 60
+    diastolic_bp_normal: [30, 55]
+  - name: infant
+    label_sk: "Dojča (29 dní – <1 rok)"
+    max_age_days: 364
+    hr_normal: [110, 160]
+    rr_normal: [30, 40]
+    diastolic_bp_normal: [35, 65]
+  - name: toddler
+    label_sk: "Batoľa (1 – <2 roky)"
+    max_age_days: 730
+    hr_normal: [100, 150]
+    rr_normal: [25, 35]
+    diastolic_bp_normal: [40, 68]
+  - name: preschool
+    label_sk: "Predškolák (2 – <5 rokov)"
+    max_age_days: 1826
+    hr_normal: [95, 140]
+    rr_normal: [25, 30]
+    diastolic_bp_normal: [45, 72]
+  - name: school_age
+    label_sk: "Školský vek (5 – <12 rokov)"
+    max_age_days: 4382
+    hr_normal: [80, 120]
+    rr_normal: [20, 25]
+    diastolic_bp_normal: [50, 78]
+  - name: adolescent
+    label_sk: "Adolescent (12–18 rokov)"
+    max_age_days: 6575
+    hr_normal: [60, 100]
+    rr_normal: [12, 20]
+    diastolic_bp_normal: [55, 85]
+
+# ----------------------------------------------------------------------------
+# RULES — most dangerous first (file order = tie-break priority within a color)
+# ----------------------------------------------------------------------------
+rules:
+  # --- RED: the safety floor (always escalate) -------------------------------
+  - name: unresponsive
+    label_sk: "Bezvedomie (AVPU = U)"
+    color: RED
+    all:
+      - discriminator: avpu_unresponsive
+
+  - name: apnoea
+    label_sk: "Apnoe / neadekvátne dýchanie"
+    color: RED
+    all:
+      - discriminator: apnoea
+
+  - name: airway_compromise
+    label_sk: "Ohrozené dýchacie cesty"
+    color: RED
+    all:
+      - discriminator: airway_compromise
+
+  - name: active_seizure
+    label_sk: "Prebiehajúci kŕč (status epilepticus)"
+    color: RED
+    all:
+      - discriminator: active_seizure
+
+  - name: central_cyanosis
+    label_sk: "Centrálna cyanóza"
+    color: RED
+    all:
+      - discriminator: central_cyanosis
+
+  - name: severe_hypoxia
+    label_sk: "Závažná hypoxia (SpO2 < 90 %)"
+    color: RED
+    all:
+      - vital: spo2
+        op: lt
+        value: 90
+
+  - name: shock
+    label_sk: "Šok (predĺžený kapilárny návrat + tachykardia)"
+    color: RED
+    all:
+      - vital: crt
+        op: gte
+        value: 3
+      - vital_vs_band: hr
+        bound: above_normal
+
+  - name: hypotension_for_age
+    label_sk: "Hypotenzia na vek"
+    color: RED
+    all:
+      - bp_below_band_min: true
+
+  - name: non_blanching_rash_unwell
+    label_sk: "Neblednúca (petechiálna/purpurová) vyrážka u chorého dieťaťa"
+    color: RED
+    all:
+      - discriminator: non_blanching_rash
+
+  # --- ORANGE: very urgent ---------------------------------------------------
+  - name: fever_young_infant
+    label_sk: "Horúčka u dojčaťa < 3 mesiace (riziko sepsy)"
+    color: ORANGE
+    all:
+      - age:
+          op: lt
+          value: 3
+          unit: months
+      - vital: temp
+        op: gte
+        value: 38.0
+
+  - name: moderate_hypoxia
+    label_sk: "Stredná hypoxia (SpO2 90–94 %)"
+    color: ORANGE
+    all:
+      - vital: spo2
+        op: gte
+        value: 90
+      - vital: spo2
+        op: lt
+        value: 95
+
+  - name: altered_consciousness
+    label_sk: "Porucha vedomia (AVPU = V alebo P)"
+    color: ORANGE
+    all:
+      - discriminator: altered_consciousness
+
+  - name: severe_resp_distress
+    label_sk: "Závažná dychová tieseň (výrazné zaťahovanie / grunting / alárne dýchanie)"
+    color: ORANGE
+    all:
+      - discriminator: severe_resp_distress
+
+  - name: severe_tachycardia_for_age
+    label_sk: "Závažná tachykardia na vek"
+    color: ORANGE
+    all:
+      - vital_vs_band: hr
+        bound: above_normal
+        factor: 1.3
+
+  - name: bradycardia_for_age
+    label_sk: "Bradykardia na vek"
+    color: ORANGE
+    all:
+      - vital_vs_band: hr
+        bound: below_normal
+
+  - name: severe_tachypnea_for_age
+    label_sk: "Závažná tachypnoe na vek"
+    color: ORANGE
+    all:
+      - vital_vs_band: rr
+        bound: above_normal
+        factor: 1.3
+
+  - name: prolonged_cap_refill
+    label_sk: "Predĺžený kapilárny návrat (≥ 3 s)"
+    color: ORANGE
+    all:
+      - vital: crt
+        op: gte
+        value: 3
+
+  - name: hypothermia
+    label_sk: "Hypotermia (< 36 °C)"
+    color: ORANGE
+    all:
+      - vital: temp
+        op: lt
+        value: 36.0
+
+  - name: hypoglycemia
+    label_sk: "Hypoglykémia (< 3,0 mmol/l)"
+    color: ORANGE
+    all:
+      - vital: glucose
+        op: lt
+        value: 3.0
+
+  - name: severe_pain
+    label_sk: "Silná bolesť"
+    color: ORANGE
+    all:
+      - discriminator: severe_pain
+
+  - name: immunocompromised_unwell
+    label_sk: "Imunokompromitované / rizikové dieťa, ktoré je choré"
+    color: ORANGE
+    all:
+      - discriminator: immunocompromised
+
+  - name: significant_dehydration
+    label_sk: "Významná dehydratácia"
+    color: ORANGE
+    all:
+      - discriminator: significant_dehydration
+
+  # --- YELLOW: urgent --------------------------------------------------------
+  - name: tachycardia_for_age
+    label_sk: "Tachykardia na vek"
+    color: YELLOW
+    all:
+      - vital_vs_band: hr
+        bound: above_normal
+
+  - name: tachypnea_for_age
+    label_sk: "Tachypnoe na vek"
+    color: YELLOW
+    all:
+      - vital_vs_band: rr
+        bound: above_normal
+
+  - name: diastolic_hypotension_for_age
+    label_sk: "Diastolická hypotenzia na vek"
+    color: YELLOW
+    all:
+      - vital_vs_band: diastolic_bp
+        bound: below_normal
+
+  - name: diastolic_hypertension_for_age
+    label_sk: "Diastolická hypertenzia na vek"
+    color: YELLOW
+    all:
+      - vital_vs_band: diastolic_bp
+        bound: above_normal
+
+  - name: high_fever
+    label_sk: "Vysoká horúčka (≥ 40 °C)"
+    color: YELLOW
+    all:
+      - vital: temp
+        op: gte
+        value: 40.0
+
+  - name: fever
+    label_sk: "Horúčka (≥ 38 °C)"
+    color: YELLOW
+    all:
+      - vital: temp
+        op: gte
+        value: 38.0
+
+  - name: moderate_resp_distress
+    label_sk: "Stredná dychová tieseň / zvýšená dychová práca"
+    color: YELLOW
+    all:
+      - discriminator: moderate_resp_distress
+
+  - name: moderate_pain
+    label_sk: "Stredná bolesť"
+    color: YELLOW
+    all:
+      - discriminator: moderate_pain
+
+  - name: moderate_dehydration
+    label_sk: "Stredná dehydratácia"
+    color: YELLOW
+    all:
+      - discriminator: moderate_dehydration

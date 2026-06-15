@@ -1,0 +1,232 @@
+/* ── App shell: sidebar + content panel ────────────────────────────────── */
+@layer components {
+  .app-shell {
+    @apply grid min-h-screen;
+    grid-template-columns: 268px 1fr;
+    transition: grid-template-columns 0.15s;
+  }
+  .app-shell.sidebar-collapsed {
+    grid-template-columns: 4.75rem 1fr;
+  }
+
+  /* ── Sidebar ──────────────────────────────────────────────────────────── */
+  .sidebar {
+    @apply flex flex-col sticky top-0 h-screen overflow-hidden;
+    background: var(--color-side);
+    color: var(--color-side-text);
+  }
+  .side-brand {
+    @apply flex items-center gap-3;
+    padding: 1.25rem 1.125rem 1.125rem;
+  }
+  .sidebar.collapsed .side-brand {
+    @apply flex-col gap-2;
+    padding: 1rem 0.5rem;
+  }
+  .side-brand .logo {
+    @apply grid place-items-center rounded-xl text-white;
+    width: 2.5rem;
+    height: 2.5rem;
+    flex: none;
+    background: linear-gradient(160deg, #16a3a3, #0e7a7a);
+    box-shadow: 0 6px 16px -6px rgba(14, 138, 138, 0.7);
+  }
+  .side-brand .logo svg {
+    width: 1.3rem;
+    height: 1.3rem;
+  }
+  .side-brand .bt {
+    @apply flex flex-col leading-tight min-w-0;
+  }
+  .side-brand .bt strong {
+    @apply text-white font-bold text-sm;
+    letter-spacing: -0.01em;
+  }
+  .side-brand .bt span {
+    color: var(--color-side-text-dim);
+    font-size: 11.5px;
+  }
+  .side-toggle {
+    @apply ml-auto grid place-items-center rounded-lg cursor-pointer flex-none border-0;
+    width: 1.75rem;
+    height: 1.75rem;
+    background: transparent;
+    color: var(--color-side-text-dim);
+  }
+  .side-toggle:hover {
+    background: var(--color-side-2);
+    color: #fff;
+  }
+  .side-toggle svg {
+    width: 1rem;
+    height: 1rem;
+    transition: transform 0.15s;
+  }
+  .sidebar.collapsed .side-toggle {
+    @apply ml-0;
+  }
+  .sidebar.collapsed .side-toggle svg {
+    transform: rotate(180deg);
+  }
+  .side-scroll {
+    @apply flex-1 overflow-auto;
+    padding: 0.5rem 0.75rem;
+  }
+  .sidebar.collapsed .side-scroll {
+    padding: 0.5rem 0.5rem;
+  }
+
+  .nav-item {
+    @apply flex items-center gap-3 rounded-xl no-underline font-semibold cursor-pointer;
+    padding: 0.65rem 0.75rem;
+    color: var(--color-side-text);
+    font-size: 14.5px;
+  }
+  .sidebar.collapsed .nav-item {
+    @apply justify-center;
+    padding: 0.65rem;
+  }
+  .nav-item svg {
+    width: 1.125rem;
+    height: 1.125rem;
+    flex: none;
+    opacity: 0.9;
+  }
+  .nav-item:hover {
+    @apply no-underline text-white;
+    background: var(--color-side-2);
+  }
+  .nav-item.router-link-active,
+  .nav-item.active {
+    @apply text-white;
+    background: var(--color-primary);
+    box-shadow: 0 6px 16px -8px rgba(14, 138, 138, 0.9);
+  }
+
+  /* Collapsible "my cases" group */
+  .side-group {
+    @apply mt-1.5;
+  }
+  .group-head {
+    @apply flex items-center gap-3 rounded-xl cursor-pointer font-semibold select-none;
+    padding: 0.65rem 0.75rem;
+    color: var(--color-side-text);
+    font-size: 14.5px;
+  }
+  .group-head:hover {
+    @apply text-white;
+    background: var(--color-side-2);
+  }
+  .group-head svg.ic {
+    width: 1.125rem;
+    height: 1.125rem;
+    flex: none;
+    opacity: 0.9;
+  }
+  .group-head .count {
+    @apply ml-auto inline-flex items-center justify-center rounded-full font-bold;
+    min-width: 1.375rem;
+    height: 1.25rem;
+    padding: 0 0.45rem;
+    background: #2c4a55;
+    color: #cfe0e5;
+    font-size: 11.5px;
+  }
+  .group-head .chev {
+    width: 1rem;
+    height: 1rem;
+    flex: none;
+    opacity: 0.7;
+    transition: transform 0.15s;
+  }
+  .group-head .chev.collapsed {
+    transform: rotate(-90deg);
+  }
+
+  .case-list {
+    @apply flex flex-col gap-0.5 my-1;
+  }
+  .case-row {
+    @apply flex items-center gap-2.5 rounded-lg no-underline cursor-pointer;
+    padding: 0.5rem 0.75rem 0.5rem 0.875rem;
+    color: var(--color-side-text);
+  }
+  .case-row:hover {
+    @apply no-underline text-white;
+    background: var(--color-side-2);
+  }
+  .case-row .swatch {
+    width: 0.5625rem;
+    height: 0.5625rem;
+    border-radius: 50%;
+    flex: none;
+  }
+  .case-row .case-meta {
+    @apply min-w-0 flex flex-col;
+    line-height: 1.3;
+  }
+  .case-row .case-meta .ttl {
+    @apply font-semibold truncate;
+    font-size: 13.5px;
+  }
+  .case-row .case-meta .sub {
+    @apply truncate;
+    color: var(--color-side-text-dim);
+    font-size: 11.5px;
+  }
+  .see-all {
+    @apply inline-block no-underline font-semibold;
+    padding: 0.45rem 0.875rem;
+    font-size: 12.5px;
+    color: #8fd0cd;
+  }
+  .see-all:hover {
+    @apply no-underline;
+    color: #bfe7e4;
+  }
+  .side-empty {
+    @apply px-3 py-2;
+    color: var(--color-side-text-dim);
+    font-size: 12.5px;
+  }
+
+  /* Triage swatch dots (sidebar) reuse the triage palette. */
+  .swatch.s-red { background: var(--color-triage-red); }
+  .swatch.s-orange { background: var(--color-triage-orange); }
+  .swatch.s-yellow { background: var(--color-triage-yellow); }
+  .swatch.s-green { background: var(--color-triage-green); }
+  .swatch.s-blue { background: var(--color-triage-blue); }
+
+  /* ── Content panel ────────────────────────────────────────────────────── */
+  .panel {
+    @apply flex flex-col min-w-0;
+  }
+  .topbar {
+    @apply flex items-center gap-3 sticky top-0 z-10;
+    padding: 0.9rem 2.25rem;
+    background: rgba(255, 255, 255, 0.82);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--color-border);
+  }
+  .topbar .crumb {
+    @apply font-semibold;
+    font-size: 13.5px;
+    color: var(--color-muted);
+  }
+  .topbar .crumb b {
+    color: var(--color-text);
+  }
+
+  /* Named to avoid colliding with Tailwind v4's built-in `.container` utility,
+     whose responsive max-widths (in @layer utilities) would otherwise win the
+     cascade on wide viewports and override these. */
+  .page-container {
+    @apply mx-auto px-9 py-8 w-full;
+    max-width: 64rem;
+  }
+  /* New-case wizard reads as a focused form, not a full-width page. */
+  .wizard {
+    @apply mx-auto;
+    max-width: 56rem;
+  }
+}

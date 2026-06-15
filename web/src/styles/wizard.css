@@ -1,0 +1,294 @@
+@layer components {
+  /* Age: a single "logarithmic" slider (days → months → years), with
+     +/- nudge buttons and a label showing the current value + unit. */
+  .age-slider-row {
+    @apply flex items-center gap-3;
+  }
+  .age-slider-btn {
+    @apply flex-none flex items-center justify-center font-semibold;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 999px;
+    background: var(--color-surface-soft);
+    color: var(--color-muted);
+    border: 1px solid var(--color-border-strong);
+    font-size: 1.1rem;
+    line-height: 1;
+    cursor: pointer;
+    transition:
+      background-color 0.12s,
+      color 0.12s;
+  }
+  .age-slider-btn:hover {
+    background: var(--color-border);
+    color: var(--color-text);
+  }
+  .age-slider {
+    @apply flex-1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--color-border);
+    outline: none;
+  }
+  .age-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 50%;
+    background: var(--color-primary);
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 1px var(--color-primary);
+    cursor: pointer;
+  }
+  .age-slider::-moz-range-thumb {
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 50%;
+    background: var(--color-primary);
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 1px var(--color-primary);
+    cursor: pointer;
+  }
+  .age-slider-value {
+    @apply flex-none text-sm font-semibold text-center;
+    min-width: 6rem;
+    padding: 0.4rem 0.75rem;
+    border-radius: 0.6rem;
+    background: var(--color-primary-soft);
+    color: var(--color-primary-hover);
+  }
+  .age-slider-row.invalid .age-slider-value {
+    color: var(--color-triage-red);
+    background: #fef2f2;
+  }
+
+  /* ── Tri-state / severity segmented controls ─────────────────────────── */
+  .discriminators {
+    @apply flex flex-col;
+  }
+  .disc-row {
+    @apply flex items-center gap-3 py-1.5;
+  }
+  .disc-label {
+    @apply flex-1 text-sm;
+    min-width: 0;
+  }
+  /* Fixed width so every control — 3-state or 4-state — forms one aligned column,
+     regardless of how many options or how long their labels are. */
+  .tristate,
+  .severity-toggle {
+    @apply grid shrink-0;
+    width: 26rem;
+    box-shadow: 0 0 0 1px var(--color-border-strong);
+    border-radius: 0.5rem;
+    overflow: hidden;
+  }
+  /* The trailing "Neznáme" column gets a fixed width (same for both controls) so it
+     forms a straight column regardless of how many buttons precede it — the other
+     columns split the remaining space evenly. */
+  .tristate {
+    grid-template-columns: repeat(2, 1fr) 6.5rem;
+  }
+  .severity-toggle {
+    grid-template-columns: repeat(3, 1fr) 6.5rem;
+  }
+  .tristate-btn,
+  .severity-btn {
+    @apply flex items-center justify-center text-center px-1 py-1.5 text-xs font-medium whitespace-nowrap;
+    line-height: 1.2;
+    background: var(--color-surface);
+    color: var(--color-muted);
+    border: 0;
+    border-radius: 0;
+    cursor: pointer;
+  }
+  .tristate-btn:not(:last-child),
+  .severity-btn:not(:last-child) {
+    border-right: 1px solid var(--color-border);
+  }
+  .tristate-btn:hover,
+  .severity-btn:hover {
+    background: var(--color-surface-soft);
+  }
+  /* Selected = "answered" — same dim accent for every option, regardless of which one,
+     so the control doesn't pre-judge severity by color. "Neznáme" stays neutral grey
+     (= not yet answered), distinguishing answered from unanswered at a glance. */
+  .tristate-btn.selected,
+  .severity-btn.selected {
+    background: var(--color-primary-soft);
+    color: var(--color-primary-hover);
+  }
+  .tristate-unknown.selected,
+  .severity-unknown.selected {
+    background: var(--color-border);
+    color: var(--color-text);
+  }
+
+  /* ── Complaint category picker ───────────────────────────────────────── */
+  .complaint-grid {
+    @apply grid grid-cols-2 gap-2 sm:grid-cols-5;
+  }
+  .complaint-grid.invalid {
+    @apply rounded-lg ring-1;
+    --tw-ring-color: var(--color-triage-red);
+  }
+  .complaint-btn {
+    @apply flex flex-col items-center gap-2 rounded-xl text-sm font-medium text-center;
+    padding: 1rem 0.5rem;
+    border: 1.5px solid var(--color-border-strong);
+    background: var(--color-surface);
+    color: var(--color-text);
+    cursor: pointer;
+    transition:
+      background-color 0.12s,
+      border-color 0.12s,
+      color 0.12s,
+      box-shadow 0.12s;
+  }
+  .complaint-btn:hover {
+    background: var(--color-surface-soft);
+  }
+  .complaint-btn svg {
+    flex: none;
+    color: var(--color-muted);
+    transition: color 0.12s;
+  }
+  .complaint-btn.selected {
+    background: var(--color-primary-soft);
+    border-color: var(--color-primary);
+    color: var(--color-primary-hover);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 15%, transparent);
+  }
+  .complaint-btn.selected svg {
+    color: var(--color-primary-hover);
+  }
+
+  /* ── Agree / disagree choice ─────────────────────────────────────────── */
+  .choice-row {
+    @apply flex gap-3 mt-2;
+  }
+  .choice-btn {
+    @apply flex-1 rounded-xl font-semibold text-base;
+    padding: 0.9rem 1rem;
+    border: 2px solid var(--color-border-strong);
+    background: var(--color-surface);
+    color: var(--color-text);
+    cursor: pointer;
+    transition:
+      background-color 0.12s,
+      border-color 0.12s,
+      color 0.12s,
+      box-shadow 0.12s;
+  }
+  .choice-btn.choice-agree {
+    color: #4c7a64;
+  }
+  .choice-btn.choice-disagree {
+    color: #a3614c;
+  }
+  .choice-btn:hover {
+    background: var(--color-surface-soft);
+  }
+  .choice-btn.choice-agree.selected {
+    background: #eaf2ee;
+    border-color: #7fab93;
+    color: #3f6b56;
+  }
+  .choice-btn.choice-disagree.selected {
+    background: #f6ece7;
+    border-color: #cf9a85;
+    color: #95543f;
+  }
+
+  /* ── Rule explanation ────────────────────────────────────────────────── */
+  .explanation-head {
+    @apply flex items-center gap-2 font-semibold;
+  }
+  .explanation-head .band {
+    @apply font-normal;
+    color: var(--color-muted);
+  }
+  .fired-list {
+    @apply list-none p-0;
+    margin: 0.6rem 0;
+  }
+  .fired-list li {
+    @apply flex items-center gap-2 rounded-lg;
+    padding: 0.35rem 0.5rem;
+  }
+  .fired-list li.decisive {
+    background: #fffbeb;
+    box-shadow: inset 0 0 0 1px #fde68a;
+  }
+  .fired-list .tag {
+    @apply text-xs rounded-full;
+    background: var(--color-text);
+    color: #fff;
+    padding: 0.05rem 0.5rem;
+  }
+  .agreement {
+    @apply my-2;
+  }
+
+  /* ── Stepper ─────────────────────────────────────────────────────────── */
+  .stepper {
+    @apply flex items-center gap-2 mb-5;
+  }
+  .step {
+    @apply flex items-center gap-2 text-sm;
+    color: var(--color-muted);
+  }
+  .step-link {
+    border: none;
+    background: none;
+    padding: 0;
+    font: inherit;
+    cursor: pointer;
+  }
+  .step-link:hover {
+    color: var(--color-text);
+  }
+  .step-num {
+    @apply inline-flex items-center justify-center rounded-full text-xs font-semibold;
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 2px solid var(--color-border);
+    background: transparent;
+    color: var(--color-muted);
+  }
+  .step.active .step-num {
+    border-color: var(--color-primary);
+    background: var(--color-primary-soft);
+    color: var(--color-primary);
+  }
+  .step.active {
+    color: var(--color-text);
+  }
+  .step.done .step-num {
+    border-color: var(--color-primary);
+    background: var(--color-primary);
+    color: #fff;
+  }
+  .step-sep {
+    @apply flex-1;
+    height: 1px;
+    background: var(--color-border);
+  }
+
+  /* ── Findings group ──────────────────────────────────────────────────── */
+  .finding-group-wrap {
+    @apply mb-4;
+  }
+  .group-title {
+    @apply text-xs font-semibold uppercase tracking-wide mb-1.5 px-1;
+    color: var(--color-muted);
+  }
+  .finding-group {
+    @apply rounded-xl border px-3 py-1.5;
+    border-color: var(--color-border);
+    background: var(--color-surface-soft);
+  }
+}

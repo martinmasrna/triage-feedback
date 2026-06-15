@@ -1,0 +1,29 @@
+{
+  "name": "triage-feedback-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Backend for the pediatric triage-feedback tool. Currently: the deterministic rule engine.",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "start": "tsx src/server.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "seed:pending": "tsx scripts/seed-pending-case.ts"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.0.4",
+    "better-sqlite3": "^12.10.0",
+    "hono": "^4.12.25",
+    "yaml": "^2.5.1",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^22.5.0",
+    "tsx": "^4.22.4",
+    "typescript": "^5.6.2",
+    "vitest": "^2.1.1"
+  }
+}

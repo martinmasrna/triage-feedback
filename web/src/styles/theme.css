@@ -1,0 +1,33 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   Design tokens. Triage colors follow MTS; the yellow uses dark text for
+   contrast. Primary action color is indigo so it never collides with the
+   five triage colors (notably triage-blue).
+   ───────────────────────────────────────────────────────────────────────── */
+@theme {
+  --color-bg: #eef2f4;
+  --color-surface: #ffffff;
+  --color-surface-soft: #f6f9fa;
+  --color-border: #dde6e9;
+  --color-border-strong: #c4d2d6;
+  --color-text: #15303a;
+  --color-muted: #5d7682;
+
+  /* Calm teal primary — distinct from all five triage colors (incl. triage-blue). */
+  --color-primary: #0e8a8a;
+  --color-primary-hover: #0a6f6f;
+  --color-primary-soft: #e2f3f2;
+
+  /* Sidebar shell = the palette's own deep teal-slate, for an on-palette app frame. */
+  --color-side: #142b34;
+  --color-side-2: #1c3a45;
+  --color-side-text: #aec3cb;
+  --color-side-text-dim: #7d97a1;
+
+  --color-triage-red: #dc2626;
+  --color-triage-orange: #ea580c;
+  --color-triage-yellow: #facc15;
+  --color-triage-green: #16a34a;
+  --color-triage-blue: #2563eb;
+
+  --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}

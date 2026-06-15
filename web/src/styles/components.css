@@ -1,0 +1,336 @@
+@layer components {
+  /* ── Cards & fields ──────────────────────────────────────────────────── */
+  .card {
+    @apply bg-white rounded-xl border p-5 mb-4;
+    border-color: var(--color-border);
+    box-shadow:
+      0 1px 2px rgba(15, 23, 42, 0.04),
+      0 1px 3px rgba(15, 23, 42, 0.06);
+  }
+  /* Wizard step heading: larger, centered, with breathing room before the content. */
+  .step-title {
+    @apply text-xl font-semibold text-center;
+    margin: 0 0 1.25rem;
+  }
+  .card-tight {
+    @apply p-4;
+  }
+  .field {
+    @apply flex flex-col gap-1.5 my-3;
+  }
+  .field > span {
+    @apply text-sm font-medium;
+  }
+
+  /* Distinct, breathable sections within a card (e.g. the new-case wizard's
+     first step), separated by a hairline rule. */
+  .form-section {
+    @apply py-5;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .form-section:first-child {
+    padding-top: 0;
+  }
+  .form-section:last-of-type {
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+  .section-label {
+    @apply text-base font-semibold;
+    margin: 0 0 0.75rem;
+  }
+  .req {
+    color: var(--color-triage-red);
+  }
+  .grid {
+    @apply grid grid-cols-2 gap-x-4 gap-y-1;
+  }
+  .row {
+    @apply flex gap-2;
+  }
+  .field-error {
+    @apply text-sm;
+    color: var(--color-triage-red);
+  }
+  input.invalid,
+  select.invalid,
+  textarea.invalid {
+    border-color: var(--color-triage-red);
+  }
+
+  /* ── Buttons ─────────────────────────────────────────────────────────── */
+  .btn,
+  button.btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium no-underline transition-colors;
+    cursor: pointer;
+    border-color: var(--color-border-strong);
+    background: var(--color-surface);
+    color: var(--color-text);
+  }
+  .btn:hover {
+    @apply no-underline;
+    background: var(--color-surface-soft);
+  }
+  .btn:disabled,
+  .btn[disabled] {
+    @apply opacity-50;
+    cursor: not-allowed;
+  }
+  /* `button.btn-primary` (not just `.btn-primary`) so it outranks the base `button.btn`
+     surface background — otherwise a <button> renders white instead of accent. */
+  .btn-primary,
+  button.btn-primary {
+    background: var(--color-primary);
+    border-color: transparent;
+    color: #fff;
+    box-shadow: 0 6px 16px -8px rgba(14, 138, 138, 0.7);
+    transition:
+      background-color 0.15s,
+      box-shadow 0.15s,
+      transform 0.12s;
+  }
+  .btn-primary:hover,
+  button.btn-primary:hover {
+    background: var(--color-primary-hover);
+    color: #fff;
+    transform: translateY(-1px) scale(1.015);
+    box-shadow: 0 10px 22px -8px rgba(14, 138, 138, 0.75);
+  }
+  .btn-primary:active,
+  button.btn-primary:active {
+    transform: translateY(0) scale(1);
+  }
+  /* Dimmed (desaturated) until required fields are filled — still clickable so a click
+     surfaces the per-field validation messages. */
+  .btn-primary.is-dim,
+  button.btn-primary.is-dim {
+    background: color-mix(in srgb, var(--color-primary) 34%, #b4c2c8);
+    box-shadow: none;
+  }
+  .btn-primary.is-dim:hover,
+  button.btn-primary.is-dim:hover {
+    background: color-mix(in srgb, var(--color-primary) 48%, #b4c2c8);
+    box-shadow: none;
+  }
+  .btn-ghost,
+  button.btn-ghost {
+    background: transparent;
+    border-color: transparent;
+    color: var(--color-muted);
+  }
+  .btn-ghost:hover,
+  button.btn-ghost:hover {
+    background: var(--color-surface-soft);
+    color: var(--color-text);
+  }
+  .btn-sm {
+    @apply px-2.5 py-1 text-xs;
+  }
+  .actions {
+    @apply flex gap-2 mt-4 flex-wrap;
+  }
+  .actions-end {
+    @apply justify-end;
+  }
+  .actions-split {
+    @apply justify-between;
+  }
+
+  /* Legacy button hooks: bare <button> and .button still render as our base btn.
+     :where() keeps this selector's specificity at just `button` (0,0,1), so any
+     custom button class (0,1,0) — present or future — wins automatically without
+     needing to be added to an exclusion list here. */
+  button:where(:not(.btn, .tristate-btn, .choice-btn, .age-slider-btn, .severity-btn)),
+  .button {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium no-underline transition-colors;
+    cursor: pointer;
+    border-color: var(--color-border-strong);
+    background: var(--color-surface);
+    color: var(--color-text);
+  }
+  button:where(:not(.btn, .tristate-btn, .choice-btn, .age-slider-btn)):hover,
+  .button:hover {
+    @apply no-underline;
+    background: var(--color-surface-soft);
+  }
+  button.primary {
+    background: var(--color-primary);
+    border-color: transparent;
+    color: #fff;
+  }
+  button.primary:hover {
+    background: var(--color-primary-hover);
+    color: #fff;
+  }
+  button:disabled {
+    @apply opacity-50;
+    cursor: not-allowed;
+  }
+
+  /* ── Triage color chips ──────────────────────────────────────────────── */
+  .chip {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold;
+    color: #fff;
+  }
+  .chip-red {
+    background: var(--color-triage-red);
+  }
+  .chip-orange {
+    background: var(--color-triage-orange);
+  }
+  .chip-yellow {
+    background: var(--color-triage-yellow);
+    color: #1f2937;
+  }
+  .chip-green {
+    background: var(--color-triage-green);
+  }
+  .chip-blue {
+    background: var(--color-triage-blue);
+  }
+
+  /* ── Spinner ─────────────────────────────────────────────────────────── */
+  .spinner {
+    display: inline-block;
+    width: 1.1em;
+    height: 1.1em;
+    border: 2px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: -0.15em;
+  }
+  .loading-row {
+    @apply flex items-center gap-2 mt-3;
+    color: var(--color-muted);
+  }
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* ── Table ───────────────────────────────────────────────────────────── */
+  table.cases {
+    @apply w-full bg-white rounded-xl overflow-hidden;
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1px solid var(--color-border);
+  }
+  table.cases th,
+  table.cases td {
+    @apply text-left text-sm;
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+  table.cases th {
+    @apply text-xs font-semibold uppercase tracking-wide;
+    background: var(--color-surface-soft);
+    color: var(--color-muted);
+    cursor: default;
+  }
+  table.cases th.sortable {
+    cursor: pointer;
+    user-select: none;
+  }
+  table.cases th.sortable:hover {
+    color: var(--color-text);
+  }
+  table.cases tbody tr:last-child td {
+    border-bottom: 0;
+  }
+  table.cases tr.clickable {
+    cursor: pointer;
+  }
+  table.cases tr.clickable:hover td {
+    background: var(--color-surface-soft);
+  }
+
+  .toolbar {
+    @apply flex items-center gap-4 flex-wrap;
+  }
+  .toolbar .spacer {
+    @apply flex-1;
+  }
+  .inline {
+    @apply inline-flex items-center gap-1.5;
+  }
+  .inline input[type="checkbox"] {
+    @apply w-auto;
+  }
+  .inline select {
+    @apply w-auto;
+  }
+  .kv {
+    @apply inline-block mr-3;
+  }
+
+  /* ── Case summary blocks (detail view "Zadané údaje") ───────────────────── */
+  .case-stats {
+    @apply flex flex-wrap gap-x-8 gap-y-3 mb-4;
+  }
+  .case-stats .stat {
+    @apply flex flex-col gap-0.5;
+  }
+  .case-stats .stat-label {
+    @apply text-xs font-semibold uppercase tracking-wide;
+    color: var(--color-muted);
+  }
+  .case-stats .stat-value {
+    @apply text-base font-semibold;
+  }
+
+  .note-block {
+    @apply rounded-lg px-4 py-3 mb-4;
+    background: var(--color-surface-soft);
+    border-left: 3px solid var(--color-primary);
+  }
+  .note-block .note-label {
+    @apply block text-xs font-semibold uppercase tracking-wide mb-1;
+    color: var(--color-muted);
+  }
+  .note-block p {
+    @apply m-0 leading-relaxed;
+  }
+
+  .tag-group {
+    @apply mb-1;
+  }
+  .tag-group + .tag-group {
+    @apply mt-3;
+  }
+  .tag-group-label {
+    @apply block text-xs font-semibold uppercase tracking-wide mb-1.5;
+    color: var(--color-muted);
+  }
+  .tags {
+    @apply flex flex-wrap gap-1.5;
+  }
+  .tag {
+    @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium;
+    background: var(--color-surface-soft);
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
+  }
+
+  /* ── Banners ─────────────────────────────────────────────────────────── */
+  .banner {
+    @apply rounded-lg mb-3;
+    padding: 0.65rem 0.9rem;
+  }
+  .banner-error {
+    background: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+  }
+  .banner-warn {
+    background: #fffbeb;
+    color: #92400e;
+    border: 1px solid #fde68a;
+  }
+  .banner-success {
+    background: #f0fdf4;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+  }
+}

@@ -1,0 +1,82 @@
+/* ── Base ──────────────────────────────────────────────────────────────── */
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    margin: 0;
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1 {
+    @apply text-2xl font-semibold tracking-tight;
+    margin: 0 0 0.25rem;
+  }
+  h2 {
+    @apply text-lg font-semibold;
+    margin: 0 0 0.25rem;
+  }
+  h3 {
+    @apply text-base font-semibold;
+    margin: 1.1rem 0 0.5rem;
+  }
+  h4 {
+    @apply text-sm font-semibold;
+    margin: 0.9rem 0 0.3rem;
+  }
+  a {
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+  a:hover {
+    text-decoration: underline;
+  }
+  label {
+    color: var(--color-text);
+  }
+  input,
+  select,
+  textarea {
+    @apply w-full rounded-lg border bg-white px-3 py-2 text-sm;
+    border-color: var(--color-border-strong);
+    font: inherit;
+    color: var(--color-text);
+  }
+  input::placeholder,
+  textarea::placeholder {
+    color: #94a3b8;
+  }
+  input:focus,
+  select:focus,
+  textarea:focus {
+    @apply outline-none ring-2;
+    --tw-ring-color: color-mix(in srgb, var(--color-primary) 45%, transparent);
+    border-color: var(--color-primary);
+  }
+  textarea {
+    resize: vertical;
+    min-height: 4.5rem;
+  }
+  input:disabled,
+  select:disabled,
+  textarea:disabled {
+    background: var(--color-surface-soft);
+    color: var(--color-muted);
+    cursor: not-allowed;
+  }
+}
+
+/* ── Helpers ───────────────────────────────────────────────────────────── */
+.muted {
+  color: var(--color-muted);
+}
+.small {
+  @apply text-sm;
+}
