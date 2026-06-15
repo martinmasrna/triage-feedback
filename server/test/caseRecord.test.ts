@@ -113,7 +113,7 @@ describe("InMemoryCaseStore + selectCases", () => {
   function make(id: string, agrees: boolean, spo2: number, at: string): StoredCase {
     const v: Verdict = { agrees };
     return assembleCase({
-      entered: entered({ vitals: { spo2 } }),
+      entered: entered({ vitals: { spo2 }, discriminators: { on_oxygen: "absent" } }),
       verdict: v,
       ruleSet: rules,
       id,
@@ -146,7 +146,7 @@ describe("InMemoryCaseStore + selectCases", () => {
   it("a pending case (verdict null) is never a 'disagreement'", () => {
     const a = make("a", false, 80, "2026-06-09T09:00:00Z"); // real disagreement
     const pending = assembleCase({
-      entered: entered({ vitals: { spo2: 80 } }),
+      entered: entered({ vitals: { spo2: 80 }, discriminators: { on_oxygen: "absent" } }),
       verdict: null,
       source: "ai_generated",
       ruleSet: rules,
@@ -163,6 +163,7 @@ describe("export", () => {
       note: 'Dieťa "ťažko" dýcha, vidno zaťahovanie\nmedzirebrových priestorov, teplota stúpa',
       complaint_text: "kašeľ, dýchavičnosť",
       vitals: { spo2: 80 },
+      discriminators: { on_oxygen: "absent" },
     }),
     verdict: { agrees: false, comment: "I'd say orange, not red" },
     ruleSet: rules,

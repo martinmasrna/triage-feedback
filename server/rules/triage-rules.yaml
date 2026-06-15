@@ -25,11 +25,14 @@
 #
 # VITAL KEYS:        hr (bpm) · rr (/min) · spo2 (%) · temp (°C) · systolic_bp (mmHg)
 #                    · diastolic_bp (mmHg) · crt (capillary refill, s) · glucose (mmol/L)
+#                    · pain_score (0–10)
 #
 # DISCRIMINATOR KEYS used below: avpu_unresponsive, apnoea, airway_compromise,
 #   active_seizure, central_cyanosis, non_blanching_rash, altered_consciousness,
 #   severe_resp_distress, moderate_resp_distress, severe_pain, moderate_pain,
-#   immunocompromised, significant_dehydration, moderate_dehydration
+#   immunocompromised, significant_dehydration, moderate_dehydration,
+#   on_oxygen, pat_appearance_abnormal, pat_wob_abnormal, pat_circulation_abnormal,
+#   poor_feeding, reduced_urine_output
 # =============================================================================
 
 version: "0.1.0-draft"
@@ -83,7 +86,7 @@ age_bands:
 # RULES — most dangerous first (file order = tie-break priority within a color)
 # ----------------------------------------------------------------------------
 rules:
-  # --- RED: the safety floor (always escalate) -------------------------------
+### --- RED: the safety floor (always escalate) -------------------------------
   - name: unresponsive
     label_sk: "Bezvedomie (AVPU = U)"
     color: RED
@@ -114,13 +117,54 @@ rules:
     all:
       - discriminator: central_cyanosis
 
-  - name: severe_hypoxia
-    label_sk: "Závažná hypoxia (SpO2 < 90 %)"
+  # uses 'pat_circulation_abnormal'
+  - name: shock_pat_circ_crt
+    label_sk: "Šok: abn. cirkulácia (PAT) + predĺžený kap. návrat"
     color: RED
     all:
+      - discriminator: pat_circulation_abnormal
+      - vital: crt
+        op: gte
+        value: 3
+
+  # uses 'pat_circulation_abnormal'
+  - name: shock_pat_circ_hypotension
+    label_sk: "Šok: abn. cirkulácia (PAT) + hypotenzia"
+    color: RED
+    all:
+      - discriminator: pat_circulation_abnormal
+      - bp_below_band_min: true
+
+  - name: neonate_fever
+    label_sk: "Novorodenec (<28 dní) s horúčkou (≥ 38,0 °C)"
+    color: RED
+    all:
+      - age:
+          op: lt
+          value: 28
+          unit: days
+      - vital: temp
+        op: gte
+        value: 38.0
+
+  # uses new discriminator 'on_oxygen'
+  - name: severe_hypoxia
+    label_sk: "Závažná hypoxia (SpO2 < 90 %) — na vzduchu"
+    color: RED
+    all:
+      - discriminator: on_oxygen
+        state: absent
       - vital: spo2
         op: lt
         value: 90
+
+  - name: severe_hypothermia
+    label_sk: "Ťažká hypotermia (< 35,0 °C)"
+    color: RED
+    all:
+      - vital: temp
+        op: lt
+        value: 35.0
 
   - name: shock
     label_sk: "Šok (predĺžený kapilárny návrat + tachykardia)"
@@ -138,35 +182,97 @@ rules:
     all:
       - bp_below_band_min: true
 
+  - name: bradycardia_crt
+    label_sk: "Bradykardia + predĺžený kap. návrat"
+    color: RED
+    all:
+      - vital_vs_band: hr
+        bound: below_normal
+      - vital: crt
+        op: gte
+        value: 3
+
+  - name: bradycardia_hypotension
+    label_sk: "Bradykardia + hypotenzia"
+    color: RED
+    all:
+      - vital_vs_band: hr
+        bound: below_normal
+      - bp_below_band_min: true
+
   - name: non_blanching_rash_unwell
     label_sk: "Neblednúca (petechiálna/purpurová) vyrážka u chorého dieťaťa"
     color: RED
     all:
       - discriminator: non_blanching_rash
 
-  # --- ORANGE: very urgent ---------------------------------------------------
+  - name: very_prolonged_cap_refill
+    label_sk: "Veľmi predĺžený kapilárny návrat (≥ 4 s)"
+    color: RED
+    all:
+      - vital: crt
+        op: gte
+        value: 4
+
+### --- ORANGE: very urgent ---------------------------------------------------
+  # uses 'pat_appearance_abnormal'
+  - name: ill_appearance
+    label_sk: "Nepriaznivý vzhľad (PAT: vzhľad abnormálny)"
+    color: ORANGE
+    all:
+      - discriminator: pat_appearance_abnormal
+
   - name: fever_young_infant
-    label_sk: "Horúčka u dojčaťa < 3 mesiace (riziko sepsy)"
+    label_sk: "Horúčka u dojčaťa 28-90 dní (riziko sepsy)"
     color: ORANGE
     all:
       - age:
+          op: gte
+          value: 28
+          unit: days
+      - age:
           op: lt
-          value: 3
-          unit: months
+          value: 90
+          unit: days
       - vital: temp
         op: gte
         value: 38.0
 
+  # uses new discriminator 'on_oxygen'
   - name: moderate_hypoxia
-    label_sk: "Stredná hypoxia (SpO2 90–94 %)"
+    label_sk: "Stredná hypoxia (SpO2 90–94 %) — na vzduchu"
     color: ORANGE
     all:
+      - discriminator: on_oxygen
+        state: absent
       - vital: spo2
         op: gte
         value: 90
       - vital: spo2
         op: lt
         value: 95
+
+  # NEW; uses new discriminator 'on_oxygen'
+  - name: hypoxemia_on_oxygen
+    label_sk: "Hypoxémia napriek kyslíku (SpO2 < 92 %)"
+    color: ORANGE
+    all:
+      - discriminator: on_oxygen
+      - vital: spo2
+        op: lt
+        value: 92
+
+  - name: infant_rr_gt_60
+    label_sk: "Dojča s dychovou frekvenciou > 60/min"
+    color: ORANGE
+    all:
+      - age:
+          op: lt
+          value: 1
+          unit: years
+      - vital: rr
+        op: gt
+        value: 60
 
   - name: altered_consciousness
     label_sk: "Porucha vedomia (AVPU = V alebo P)"
@@ -211,6 +317,14 @@ rules:
         op: gte
         value: 3
 
+  - name: hyperpyrexia
+    label_sk: "Hyperpyrexia (≥ 41,0 °C)"
+    color: ORANGE
+    all:
+      - vital: temp
+        op: gte
+        value: 41.0
+
   - name: hypothermia
     label_sk: "Hypotermia (< 36 °C)"
     color: ORANGE
@@ -218,6 +332,16 @@ rules:
       - vital: temp
         op: lt
         value: 36.0
+
+  - name: fever_plus_tachycardia
+    label_sk: "Horúčka + tachykardia (systémová záťaž)"
+    color: ORANGE
+    all:
+      - vital: temp
+        op: gte
+        value: 38.0
+      - vital_vs_band: hr
+        bound: above_normal
 
   - name: hypoglycemia
     label_sk: "Hypoglykémia (< 3,0 mmol/l)"
@@ -227,17 +351,64 @@ rules:
         op: lt
         value: 3.0
 
+  # uses 'poor_feeding'
+  - name: infant_poor_feeding
+    label_sk: "Dojča (<6 mes.) — zlé prijímanie tekutín/stravy"
+    color: ORANGE
+    all:
+      - age:
+          op: lt
+          value: 6
+          unit: months
+      - discriminator: poor_feeding
+
+  # uses 'reduced_urine_output'
+  - name: infant_reduced_urine
+    label_sk: "Dojča (<6 mes.) — znížené močenie"
+    color: ORANGE
+    all:
+      - age:
+          op: lt
+          value: 6
+          unit: months
+      - discriminator: reduced_urine_output
+
   - name: severe_pain
     label_sk: "Silná bolesť"
     color: ORANGE
     all:
       - discriminator: severe_pain
 
-  - name: immunocompromised_unwell
-    label_sk: "Imunokompromitované / rizikové dieťa, ktoré je choré"
+  - name: severe_pain_score
+    label_sk: "Silná bolesť (skóre 7–10/10)"
+    color: ORANGE
+    all:
+      - vital: pain_score
+        op: gte
+        value: 7
+
+  - name: immunocompromised_with_fever
+    label_sk: "Imunokompromitované dieťa s horúčkou"
     color: ORANGE
     all:
       - discriminator: immunocompromised
+      - vital: temp
+        op: gte
+        value: 38.0
+
+  - name: immunocompromised_with_distress
+    label_sk: "Imunokompromitované dieťa s dychovou tiesňou"
+    color: ORANGE
+    all:
+      - discriminator: immunocompromised
+      - discriminator: severe_resp_distress
+
+  - name: immunocompromised_with_altered_consciousness
+    label_sk: "Imunokompromitované dieťa s poruchou vedomia"
+    color: ORANGE
+    all:
+      - discriminator: immunocompromised
+      - discriminator: altered_consciousness
 
   - name: significant_dehydration
     label_sk: "Významná dehydratácia"
@@ -245,7 +416,7 @@ rules:
     all:
       - discriminator: significant_dehydration
 
-  # --- YELLOW: urgent --------------------------------------------------------
+### --- YELLOW: urgent --------------------------------------------------------
   - name: tachycardia_for_age
     label_sk: "Tachykardia na vek"
     color: YELLOW
@@ -301,6 +472,17 @@ rules:
     color: YELLOW
     all:
       - discriminator: moderate_pain
+
+  - name: moderate_pain_score
+    label_sk: "Stredná bolesť (skóre 4–6/10)"
+    color: YELLOW
+    all:
+      - vital: pain_score
+        op: gte
+        value: 4
+      - vital: pain_score
+        op: lt
+        value: 7
 
   - name: moderate_dehydration
     label_sk: "Stredná dehydratácia"

@@ -49,7 +49,11 @@ describe("default / no rules fired", () => {
 
 describe("red-flag floor", () => {
   it("severe hypoxia is RED and decisive", () => {
-    const r = run({ age: { value: 4, unit: "years" }, vitals: { spo2: 85 } });
+    const r = run({
+      age: { value: 4, unit: "years" },
+      vitals: { spo2: 85 },
+      discriminators: { on_oxygen: "absent" },
+    });
     expect(r.color).toBe("RED");
     expect(r.decisive?.name).toBe("severe_hypoxia");
   });
@@ -81,7 +85,7 @@ describe("red-flag floor", () => {
     const r = run({
       age: { value: 4, unit: "years" },
       vitals: { spo2: 85 },
-      discriminators: { avpu_unresponsive: "present" },
+      discriminators: { avpu_unresponsive: "present", on_oxygen: "absent" },
     });
     expect(r.color).toBe("RED");
     // unresponsive is listed before severe_hypoxia in the YAML

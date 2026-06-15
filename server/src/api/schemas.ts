@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { VITAL_KEYS } from "../engine/vocabulary.js";
+import { VITALS } from "../engine/vocabulary.js";
 
 // Zod schemas validate everything the browser sends before it reaches our logic. The browser is
 // untrusted input; these are the gate.
@@ -8,9 +8,15 @@ const triState = z.enum(["present", "absent", "unknown"]);
 
 // A partial map of known vitals → numbers. Built as an object of optional keys (NOT an
 // enum-keyed z.record, which zod v4 treats as exhaustive). Unknown keys are stripped.
+// Vitals with declared min/max bounds (e.g. pain_score) are clamped accordingly.
 const vitalsShape = Object.fromEntries(
-  VITAL_KEYS.map((k) => [k, z.number().finite().optional()]),
-) as Record<(typeof VITAL_KEYS)[number], z.ZodOptional<z.ZodNumber>>;
+  VITALS.map((v) => {
+    let schema = z.number().finite();
+    if (v.min !== undefined) schema = schema.min(v.min);
+    if (v.max !== undefined) schema = schema.max(v.max);
+    return [v.key, schema.optional()];
+  }),
+) as Record<(typeof VITALS)[number]["key"], z.ZodOptional<z.ZodNumber>>;
 const VitalsSchema = z.object(vitalsShape);
 
 export const AgeSchema = z.object({

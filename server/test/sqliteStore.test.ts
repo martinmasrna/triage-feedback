@@ -21,7 +21,7 @@ function sampleCase(id: string, spo2: number, agrees: boolean, at: string) {
       age: { value: 5, unit: "years" },
       complaint_category: "breathing",
       vitals: { spo2 },
-      discriminators: {},
+      discriminators: { on_oxygen: "absent" },
     },
     verdict: { agrees },
     ruleSet: rules,

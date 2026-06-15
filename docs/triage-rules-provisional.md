@@ -98,6 +98,43 @@ everything else.
 | Minor complaint, normal vitals, no red flags | GREEN |
 | Trivial / non-urgent | BLUE |
 
+## New data fields (oxygen, PAT discriminators, infant hydration, pain score)
+
+Each new discriminator is tri-state (`present` / `absent` / `unknown`, default `unknown`).
+
+- **on_oxygen** — the child is currently receiving supplemental oxygen (nasal cannula, mask,
+  HFNC, CPAP/BiPAP, or ventilator). `absent` means explicitly on room/ambient air.
+- **pat_appearance_abnormal** — Pediatric Assessment Triangle: appearance abnormal (poor tone,
+  not interacting, lethargic, inconsolable).
+- **pat_wob_abnormal** — PAT: work of breathing abnormal (tachypnea, retractions, nasal
+  flaring, grunting).
+- **pat_circulation_abnormal** — PAT: circulation/skin abnormal (pallor, mottling, cyanosis,
+  cool peripheries).
+- **poor_feeding** — caregiver reports poor intake in an infant.
+- **reduced_urine_output** — fewer wet diapers / markedly reduced urine output in an infant.
+- **pain_score** — numeric vital, 0–10. Only recorded if a number is explicitly stated; never
+  inferred from descriptive words.
+
+### SpO₂ rules and oxygen
+
+The existing SpO₂ rules (`severe_hypoxia`, `moderate_hypoxia`) are now labeled "— na vzduchu"
+(on room air) and only fire when `on_oxygen` is `absent`. A new rule, `hypoxemia_on_oxygen`
+(ORANGE), fires when `on_oxygen` is `present` and SpO₂ < 92%, covering hypoxemia despite
+oxygen therapy. If `on_oxygen` is `unknown`, none of these three SpO₂ rules fire.
+
+### New rules added
+
+| Rule name | Condition | Color |
+|-----------|-----------|-------|
+| shock_pat_circ_crt | pat_circulation_abnormal + CRT ≥ 3s | RED |
+| shock_pat_circ_hypotension | pat_circulation_abnormal + SBP below band minimum | RED |
+| ill_appearance | pat_appearance_abnormal | ORANGE |
+| hypoxemia_on_oxygen | on_oxygen + SpO₂ < 92% | ORANGE |
+| infant_poor_feeding | age < 6 months + poor_feeding | ORANGE |
+| infant_reduced_urine | age < 6 months + reduced_urine_output | ORANGE |
+| severe_pain_score | pain_score ≥ 7 | ORANGE |
+| moderate_pain_score | pain_score 4–6 | YELLOW |
+
 ## Explanation contract
 
 Whatever the engine outputs, the shown explanation = **the list of rules that fired + the

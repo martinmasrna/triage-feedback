@@ -14,6 +14,9 @@ export interface VitalDef {
   key: VitalKey;
   label_sk: string;
   unit: string;
+  /** Optional inclusive bounds, enforced by the extraction schema and input validation. */
+  min?: number;
+  max?: number;
 }
 
 export interface CategoryDef {
@@ -50,6 +53,12 @@ export const DISCRIMINATORS: readonly DiscriminatorDef[] = [
   { key: "immunocompromised", label_sk: "Imunokompromitované / rizikové dieťa" },
   { key: "significant_dehydration", label_sk: "Významná dehydratácia" },
   { key: "moderate_dehydration", label_sk: "Stredná dehydratácia" },
+  { key: "on_oxygen", label_sk: "Na kyslíkovej terapii" },
+  { key: "pat_appearance_abnormal", label_sk: "PAT: abnormálny vzhľad" },
+  { key: "pat_wob_abnormal", label_sk: "PAT: abnormálna dychová práca" },
+  { key: "pat_circulation_abnormal", label_sk: "PAT: abnormálna cirkulácia/farba kože" },
+  { key: "poor_feeding", label_sk: "Zlé prijímanie tekutín/stravy (dojča)" },
+  { key: "reduced_urine_output", label_sk: "Znížené močenie (dojča)" },
 ];
 
 export const VITALS: readonly VitalDef[] = [
@@ -61,6 +70,7 @@ export const VITALS: readonly VitalDef[] = [
   { key: "diastolic_bp", label_sk: "Diastolický krvný tlak", unit: "mmHg" },
   { key: "crt", label_sk: "Kapilárny návrat", unit: "s" },
   { key: "glucose", label_sk: "Glykémia", unit: "mmol/l" },
+  { key: "pain_score", label_sk: "Skóre bolesti", unit: "0-10", min: 0, max: 10 },
 ];
 
 export const DISCRIMINATOR_KEYS: readonly string[] = DISCRIMINATORS.map((d) => d.key);

@@ -37,7 +37,8 @@ export type VitalKey =
   | "systolic_bp" // systolic blood pressure, mmHg
   | "diastolic_bp" // diastolic blood pressure, mmHg
   | "crt" // capillary refill time, seconds
-  | "glucose"; // blood glucose, mmol/L
+  | "glucose" // blood glucose, mmol/L
+  | "pain_score"; // self/observer-reported pain, 0–10
 
 export type TriState = "present" | "absent" | "unknown";
 
