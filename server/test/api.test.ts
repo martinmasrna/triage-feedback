@@ -49,6 +49,34 @@ describe("GET /api/health and /api/form-options", () => {
   });
 });
 
+describe("GET /api/seeds", () => {
+  it("serves the configured seed cases", async () => {
+    const seeds = [
+      {
+        id: "s1",
+        intent: "Test seed",
+        age: { value: 3, unit: "years" as const },
+        complaint_category: "fever",
+        note: "Horúčka.",
+        vitals: {},
+        discriminators: {},
+      },
+    ];
+    const app = createApp({ store: new InMemoryCaseStore(), reader: new StubReader(), ruleSet, seeds });
+    const body = (await (await app.request("/api/seeds")).json()) as any[];
+    expect(body).toHaveLength(1);
+    expect(body[0].id).toBe("s1");
+    expect(body[0].intent).toBe("Test seed");
+  });
+
+  it("returns an empty list when no seeds are configured", async () => {
+    const { app } = makeApp();
+    const res = await app.request("/api/seeds");
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual([]);
+  });
+});
+
 describe("POST /api/evaluate", () => {
   it("runs the engine and returns the decision + a draftId", async () => {
     const { app } = makeApp();

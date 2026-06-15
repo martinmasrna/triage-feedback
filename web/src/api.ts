@@ -5,6 +5,7 @@ import type {
   ExtractionResult,
   FormOptions,
   ListFilter,
+  SeedCase,
   StoredCase,
   Verdict,
 } from "./types";
@@ -27,6 +28,9 @@ const jsonHeaders = { "content-type": "application/json" };
 
 export const api = {
   formOptions: () => fetch("/api/form-options").then((r) => jsonOrThrow<FormOptions>(r)),
+
+  /** Curated mock cases for the entry-screen picker. */
+  seeds: () => fetch("/api/seeds").then((r) => jsonOrThrow<SeedCase[]>(r)),
 
   /** Read the note into structured findings, to pre-fill vitals + discriminators (step 1 → 2). */
   extract: (entered: EnteredCase) =>

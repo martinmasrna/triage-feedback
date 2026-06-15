@@ -11,6 +11,7 @@ import type {
   EvaluateResponse,
   ExtractionResult,
   FormOptions,
+  SeedCase,
   TriState,
 } from "../types";
 import { categoryIcon } from "../categoryIcons";
@@ -27,6 +28,8 @@ const STEPS = ["Základné údaje", "Vitálne funkcie", "Klinické nálezy", "V�
 const step = ref(1);
 const maxStep = ref(1);
 const options = ref<FormOptions | null>(null);
+const seeds = ref<SeedCase[]>([]);
+const selectedSeedId = ref("");
 const error = ref("");
 
 const form = reactive({
@@ -126,7 +129,32 @@ onMounted(async () => {
   } catch (e) {
     error.value = `Nepodarilo sa načítať formulár: ${(e as Error).message}`;
   }
+  // Seed cases are optional — a load failure just hides the picker, never blocks entry.
+  try {
+    seeds.value = await api.seeds();
+  } catch {
+    seeds.value = [];
+  }
 });
+
+// Load a curated mock case into the form (step 1). Vitals/discriminators are pre-filled from the
+// seed but kept editable; on "Ďalej" the extractor still reads the note and fills only the gaps
+// (seed values win — see runExtract). The decision is never taken from the seed itself.
+function applySeed() {
+  const seed = seeds.value.find((s) => s.id === selectedSeedId.value);
+  if (!seed) return;
+  form.ageValue = seed.age.value;
+  form.ageUnit = seed.age.unit;
+  form.complaint_category = seed.complaint_category;
+  form.complaint_text = seed.complaint_text ?? "";
+  form.note = seed.note;
+  form.vitals = { ...seed.vitals };
+  form.discriminators = { ...seed.discriminators };
+  // Re-arm extraction so the note is re-read (and merged) on the next step.
+  extraction.value = null;
+  extractedSig = "";
+  fieldErrors.age = fieldErrors.complaint = fieldErrors.complaintText = fieldErrors.note = undefined;
+}
 
 // "Nový prípad" was clicked while already on this view — start over.
 watch(newCaseSignal, () => reset());
@@ -189,8 +217,10 @@ async function runExtract(): Promise<void> {
       discriminators: {},
     });
     extraction.value = result;
-    form.vitals = { ...result.vitals };
-    form.discriminators = { ...result.discriminators };
+    // Merge, don't clobber: values already in the form (a loaded seed, or the doctor's own edits)
+    // win; the extraction only fills the gaps it read from the note.
+    form.vitals = { ...result.vitals, ...form.vitals };
+    form.discriminators = { ...result.discriminators, ...form.discriminators };
   } catch {
     extraction.value = null; // evaluate falls back to reading the note server-side
   } finally {
@@ -252,6 +282,7 @@ function reset() {
   form.note = "";
   form.vitals = {};
   form.discriminators = {};
+  selectedSeedId.value = "";
   fieldErrors.age = fieldErrors.complaint = fieldErrors.complaintText = fieldErrors.note = undefined;
   extraction.value = null;
   extracting.value = false;
@@ -311,6 +342,19 @@ function reset() {
     <template v-if="options">
       <!-- STEP 1: BASIC INFO -->
       <div v-show="step === 1" class="card">
+        <section v-if="seeds.length" class="form-section seed-picker-section">
+          <h3 class="section-label">Načítať ukážkový prípad <span class="muted small">(voliteľné)</span></h3>
+          <select
+            class="seed-picker"
+            :disabled="locked"
+            v-model="selectedSeedId"
+            @change="applySeed"
+          >
+            <option value="">— vyberte ukážkový prípad —</option>
+            <option v-for="s in seeds" :key="s.id" :value="s.id">{{ s.intent }}</option>
+          </select>
+        </section>
+
         <section class="form-section">
           <h3 class="section-label">Vek <span class="req">*</span></h3>
           <div class="age-slider-row" :class="{ invalid: fieldErrors.age }">

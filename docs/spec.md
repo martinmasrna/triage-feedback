@@ -1,4 +1,4 @@
-# Pediatric Triage-Feedback Tool — Specification (v1.2 — 2026-06-15)
+# Pediatric Triage-Feedback Tool — Specification (v1.3 — 2026-06-15)
 
 A small Slovak, doctor-facing web tool where pediatric clinicians run mock patient cases through an automated triage system, see what it decided and why, then record whether they agree or disagree with that decision (plus an optional comment). Each saved case is a labeled, critiqued data point used to improve the triage logic.
 
@@ -7,6 +7,7 @@ Not a clinical device. Mock data only, ever.
 The frame: the system’s output is a candidate the doctor judges. This is a labeling-and-critique instrument, not “an AI that triages with a comment box.”
 
 ### Change log
+- **v1.3 (2026-06-15)** — the curated **seed bank is now wired in**: seed cases live in `server/seeds/seeds.yaml` (EnteredCase shape + optional `intent` label and `expected_color`/`expected_rule` coverage tags), are served read-only at **`GET /api/seeds`**, and a picker on entry-screen step 1 loads one into the wizard. A loaded seed pre-fills the whole form but the decision is still taken live; on *Ďalej* the extractor reads the note and **merges** its findings into the form, filling only gaps (seed/doctor values win). The same merge now also protects manual edits across back/forward navigation.
 - **v1.2 (2026-06-15)** — three behavioural changes, integrated below:
   1. The LLM reads the note **up front** and **pre-fills** the vitals and findings forms (was: read silently at the end). The doctor reviews and edits pre-filled values; the form is authoritative for the decision.
   2. The doctor’s verdict is **editable on past cases** (agree/disagree *and* comment), reversing the earlier immutability. A silent flag records whether a verdict was ever changed.

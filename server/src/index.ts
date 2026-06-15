@@ -5,6 +5,7 @@
 export * from "./engine/index.js";
 export * from "./domain/caseTypes.js";
 export { mergeFindings, assembleCase, type AssembleArgs } from "./domain/derive.js";
+export { loadSeeds, parseSeeds, DEFAULT_SEEDS_PATH, type SeedCase } from "./domain/seeds.js";
 export {
   InMemoryCaseStore,
   selectCases,
