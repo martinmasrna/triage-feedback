@@ -6,7 +6,10 @@
   "description": "Backend for the pediatric triage-feedback tool. Currently: the deterministic rule engine.",
   "scripts": {
     "dev": "tsx watch src/server.ts",
+    "dev:admin": "cross-env ADMIN_ENABLED=true ADMIN_USER=admin ADMIN_PASS=dev CORS_ORIGIN=http://127.0.0.1:5173 tsx watch src/server.ts",
     "start": "tsx src/server.ts",
+    "start:admin": "cross-env NODE_ENV=production ADMIN_ENABLED=true ADMIN_USER=admin ADMIN_PASS=dev ADMIN_UI_GATE=true WEB_ROOT=../web/dist tsx src/server.ts",
+    "start:dual": "cross-env NODE_ENV=production ADMIN_ENABLED=true ADMIN_USER=admin ADMIN_PASS=dev ADMIN_UI_GATE=true WEB_ROOT=../web/dist CORS_ORIGIN=http://127.0.0.1:5173 tsx src/server.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
@@ -22,6 +25,7 @@
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^22.5.0",
+    "cross-env": "^10.1.0",
     "tsx": "^4.22.4",
     "typescript": "^5.6.2",
     "vitest": "^2.1.1"
