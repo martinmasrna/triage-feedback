@@ -14,12 +14,18 @@ import {
   type RuleSet,
 } from "../engine/index.js";
 
-import type { EnteredCase, ExtractionResult, SecondOpinion, Verdict } from "../domain/caseTypes.js";
+import type { EnteredCase, ExtractionResult, Findings, SecondOpinion, Verdict } from "../domain/caseTypes.js";
 import { assembleCase, mergeFindings } from "../domain/derive.js";
 import type { CaseStore, ListFilter } from "../store/caseStore.js";
 import type { Reader } from "../llm/reader.js";
 import { toCSV, toJSON } from "../export/exportCases.js";
-import { CommentPatchSchema, EnteredCaseSchema, SaveSchema, VerdictSchema } from "./schemas.js";
+import {
+  EnteredCaseSchema,
+  EvaluateRequestSchema,
+  SaveSchema,
+  VerdictPatchSchema,
+  VerdictSchema,
+} from "./schemas.js";
 import { toDoctorCase } from "./doctorView.js";
 
 export interface ApiDeps {
@@ -39,6 +45,8 @@ export interface ApiOptions {
 interface Draft {
   input: EnteredCase;
   extraction: ExtractionResult;
+  /** Findings the decision was taken on — carried so the save recomputes nothing and can't drift. */
+  effective: Findings;
   secondOpinion: SecondOpinion | null;
   decision: EvaluationResult;
 }
@@ -87,15 +95,39 @@ export function createApp(deps: ApiDeps, opts: ApiOptions = {}): Hono {
     }),
   );
 
-  app.post("/api/evaluate", async (c) => {
+  // Read the note into structured findings (vitals + discriminators) without deciding anything.
+  // Called on the step 1 → 2 transition to pre-fill the form. Returns the full extraction so the
+  // browser can send it back at /evaluate, keeping the original AI read as the stored research record.
+  app.post("/api/extract", async (c) => {
     const body = await c.req.json().catch(() => null);
     const parsed = EnteredCaseSchema.safeParse(body);
     if (!parsed.success) return c.json({ error: "Invalid case", details: parsed.error.flatten() }, 400);
 
-    const input = parsed.data as EnteredCase;
+    const extraction = await deps.reader.extract(parsed.data as EnteredCase);
+    return c.json(extraction);
+  });
 
-    const extraction = await deps.reader.extract(input);
-    const effective = mergeFindings(input, extraction);
+  app.post("/api/evaluate", async (c) => {
+    const body = await c.req.json().catch(() => null);
+    const parsed = EvaluateRequestSchema.safeParse(body);
+    if (!parsed.success) return c.json({ error: "Invalid case", details: parsed.error.flatten() }, 400);
+
+    const { extraction: clientExtraction, ...input } = parsed.data as EnteredCase & {
+      extraction?: ExtractionResult;
+    };
+
+    // Pre-fill flow: the note was already read and folded into the form, so the entered case is the
+    // doctor's authoritative state — decide on it directly and store the original extraction as-is.
+    // Legacy flow (no extraction sent): read the note here and fill the gaps under the entered case.
+    let extraction: ExtractionResult;
+    let effective: Findings;
+    if (clientExtraction) {
+      extraction = clientExtraction;
+      effective = { vitals: input.vitals, discriminators: input.discriminators };
+    } else {
+      extraction = await deps.reader.extract(input);
+      effective = mergeFindings(input, extraction);
+    }
 
     const decision = evaluate(
       {
@@ -108,7 +140,7 @@ export function createApp(deps: ApiDeps, opts: ApiOptions = {}): Hono {
 
     const secondOpinion = await deps.reader.secondOpinion(input);
     const draftId = randomUUID();
-    drafts.set(draftId, { input, extraction, secondOpinion, decision });
+    drafts.set(draftId, { input, extraction, effective, secondOpinion, decision });
 
     if (drafts.size > MAX_DRAFTS) {
       const oldest = drafts.keys().next().value;
@@ -130,6 +162,7 @@ export function createApp(deps: ApiDeps, opts: ApiOptions = {}): Hono {
     const stored = assembleCase({
       entered: draft.input,
       extraction: draft.extraction,
+      effective: draft.effective,
       secondOpinion: draft.secondOpinion,
       verdict: {
         agrees: verdict.agrees,
@@ -181,12 +214,17 @@ export function createApp(deps: ApiDeps, opts: ApiOptions = {}): Hono {
     }
 
     const body = await c.req.json().catch(() => null);
-    const parsed = CommentPatchSchema.safeParse(body);
+    const parsed = VerdictPatchSchema.safeParse(body);
     if (!parsed.success) return c.json({ error: "Invalid patch", details: parsed.error.flatten() }, 400);
 
+    // A revision may change the agree/disagree, the comment, or both; an omitted agrees keeps the
+    // current one (e.g. a comment-only edit).
+    const nextAgrees = parsed.data.agrees ?? existing.verdict.agrees;
     const updated: typeof existing = {
       ...existing,
-      verdict: { ...existing.verdict, comment: parsed.data.comment },
+      verdict: { agrees: nextAgrees, comment: parsed.data.comment },
+      // Silent, sticky: record that the decision was changed post-hoc (analysis only).
+      verdict_changed: existing.verdict_changed || nextAgrees !== existing.verdict.agrees,
     };
     deps.store.save(updated);
     return c.json(toDoctorCase(updated));

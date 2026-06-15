@@ -42,7 +42,7 @@ describe("LlmReader.extract", () => {
 
     expect(result.ok).toBe(true);
     expect(result.model_id).toBe("gemma-test");
-    expect(result.prompt_version).toBe("0.1.0-en");
+    expect(result.prompt_version).toBe("0.2.0-en");
     expect(result.vitals.hr).toBe(120);
     expect(result.vitals.spo2).toBeUndefined(); // null → dropped (unknown)
     expect(result.discriminators.severe_resp_distress).toBe("present");
@@ -69,7 +69,7 @@ describe("LlmReader.extract", () => {
     expect(result.ok).toBe(false);
     expect(result.vitals).toEqual({});
     expect(result.discriminators).toEqual({});
-    expect(result.prompt_version).toBe("0.1.0-en");
+    expect(result.prompt_version).toBe("0.2.0-en");
   });
 
   it("returns ok:false when the client throws (e.g. server down)", async () => {
@@ -123,13 +123,13 @@ describe("LlmReader.secondOpinion", () => {
 describe("loadReaderPrompts variant selection", () => {
   it("defaults to the English prompts", () => {
     const p = loadReaderPrompts();
-    expect(p.extraction.meta.version).toBe("0.1.0-en");
+    expect(p.extraction.meta.version).toBe("0.2.0-en");
     expect(p.secondOpinion.meta.version).toBe("0.1.0-en");
   });
 
   it("loads the Slovak A/B variants when requested", () => {
     const p = loadReaderPrompts({ extraction: "extraction.sk", secondOpinion: "second-opinion.sk" });
-    expect(p.extraction.meta.version).toBe("0.1.0-sk");
+    expect(p.extraction.meta.version).toBe("0.2.0-sk");
     expect(p.secondOpinion.meta.version).toBe("0.1.0-sk");
   });
 });

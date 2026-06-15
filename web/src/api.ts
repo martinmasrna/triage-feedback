@@ -2,6 +2,7 @@ import type {
   DoctorCase,
   EnteredCase,
   EvaluateResponse,
+  ExtractionResult,
   FormOptions,
   ListFilter,
   StoredCase,
@@ -27,10 +28,18 @@ const jsonHeaders = { "content-type": "application/json" };
 export const api = {
   formOptions: () => fetch("/api/form-options").then((r) => jsonOrThrow<FormOptions>(r)),
 
-  evaluate: (entered: EnteredCase) =>
-    fetch("/api/evaluate", { method: "POST", headers: jsonHeaders, body: JSON.stringify(entered) }).then((r) =>
-      jsonOrThrow<EvaluateResponse>(r),
+  /** Read the note into structured findings, to pre-fill vitals + discriminators (step 1 → 2). */
+  extract: (entered: EnteredCase) =>
+    fetch("/api/extract", { method: "POST", headers: jsonHeaders, body: JSON.stringify(entered) }).then((r) =>
+      jsonOrThrow<ExtractionResult>(r),
     ),
+
+  evaluate: (entered: EnteredCase, extraction?: ExtractionResult | null) =>
+    fetch("/api/evaluate", {
+      method: "POST",
+      headers: jsonHeaders,
+      body: JSON.stringify(extraction ? { ...entered, extraction } : entered),
+    }).then((r) => jsonOrThrow<EvaluateResponse>(r)),
 
   save: (draftId: string, verdict: Verdict) =>
     fetch("/api/cases", { method: "POST", headers: jsonHeaders, body: JSON.stringify({ draftId, verdict }) }).then((r) =>
@@ -42,9 +51,9 @@ export const api = {
 
   get: (id: string) => fetch(`/api/cases/${id}`).then((r) => jsonOrThrow<DoctorCase>(r)),
 
-  /** Edit only the doctor's free-text comment; the agree/disagree itself is immutable. */
-  patchComment: (id: string, comment: string) =>
-    fetch(`/api/cases/${id}`, { method: "PATCH", headers: jsonHeaders, body: JSON.stringify({ comment }) }).then(
+  /** Revise a saved case's verdict — the agree/disagree, the comment, or both. */
+  updateVerdict: (id: string, verdict: Verdict) =>
+    fetch(`/api/cases/${id}`, { method: "PATCH", headers: jsonHeaders, body: JSON.stringify(verdict) }).then(
       (r) => jsonOrThrow<DoctorCase>(r),
     ),
 

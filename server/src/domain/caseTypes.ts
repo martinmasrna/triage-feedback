@@ -46,7 +46,7 @@ export interface SecondOpinion {
 
 /**
  * The doctor's verdict on the system's decision: a simple agree/disagree plus an optional
- * free-text explanation. The comment is the only field editable when revisiting a saved case.
+ * free-text explanation. Both fields can be revised when revisiting a saved case.
  */
 export interface Verdict {
   agrees: boolean;
@@ -89,6 +89,13 @@ export interface StoredCase {
 
   /** The doctor's verdict on the decision. null = awaiting doctor review (pending). */
   verdict: Verdict | null;
+
+  /**
+   * Silent (analysis-only, never shown to the doctor): true once a post-hoc revision changed the
+   * agree/disagree from the value first recorded. Sticky — stays true even if later flipped back.
+   * Comment-only edits do not set it.
+   */
+  verdict_changed: boolean;
 
   provenance: Provenance;
 }

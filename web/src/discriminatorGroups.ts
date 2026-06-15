@@ -54,6 +54,14 @@ interface GroupSpec {
 
 const GROUPS: GroupSpec[] = [
   {
+    title_sk: "Celkový dojem (PAT)",
+    rows: [
+      { key: "pat_appearance_abnormal" },
+      { key: "pat_wob_abnormal" },
+      { key: "pat_circulation_abnormal" },
+    ],
+  },
+  {
     title_sk: "Vedomie a neurológia",
     rows: [
       {
@@ -84,6 +92,7 @@ const GROUPS: GroupSpec[] = [
         },
       },
       { key: "central_cyanosis" },
+      { key: "on_oxygen" },
     ],
   },
   {
@@ -98,17 +107,10 @@ const GROUPS: GroupSpec[] = [
           moderateLabel_sk: "Stredná",
         },
       },
-      {
-        severityPair: {
-          label_sk: "Bolesť",
-          severeKey: "severe_pain",
-          moderateKey: "moderate_pain",
-          severeLabel_sk: "Závažná",
-          moderateLabel_sk: "Stredná",
-        },
-      },
       { key: "non_blanching_rash" },
       { key: "immunocompromised" },
+      { key: "poor_feeding" },
+      { key: "reduced_urine_output" },
     ],
   },
 ];
@@ -117,15 +119,22 @@ const DEFAULT_NONE_LABEL_SK = "Žiadna";
 const UNKNOWN_OPTION: SeverityOption = { value: "unknown", label_sk: "Neznáme" };
 
 /**
+ * Discriminators intentionally not shown as a manual control: pain severity is collected as a
+ * 0-10 number (`pain_score` vital) instead, so these are left for the LLM to fill from the
+ * narrative only. Excluded here so they don't fall into the "Ostatné" catch-all.
+ */
+const LLM_ONLY_KEYS = new Set(["severe_pain", "moderate_pain"]);
+
+/**
  * Build the findings step from /api/form-options: groups by clinical area, and folds known
  * severe/moderate discriminator pairs into a single 4-state severity row (severe / moderate /
- * none / unknown) so they can't both be answered "present" at once. Any vocabulary key not
+ * none / unknown) so they can't both be answered "present" at once. Any other vocabulary key not
  * covered by a group falls into a trailing "Ostatné" group, so a new entry is never silently
  * dropped from the form.
  */
 export function groupDiscriminators(defs: DiscriminatorDef[]): DiscriminatorGroup[] {
   const byKey = new Map(defs.map((d) => [d.key, d]));
-  const used = new Set<string>();
+  const used = new Set<string>(LLM_ONLY_KEYS);
 
   const groups: DiscriminatorGroup[] = GROUPS.map((g) => {
     const rows: FindingRow[] = [];

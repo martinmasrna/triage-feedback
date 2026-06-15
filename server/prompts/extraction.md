@@ -1,6 +1,6 @@
 ---
 id: extraction
-version: 0.1.0-en
+version: 0.2.0-en
 description: Reads a pediatric triage note into structured findings. English instructions, Slovak notes.
 temperature: 0
 ---
@@ -16,6 +16,7 @@ Rules:
 - For vitals, return a number ONLY if a specific value is given. If something is described
   only in words (e.g. "má horúčku" / feverish, with no number), return `null` — do not invent
   a number. Slovak decimals use a comma ("37,2"); output a JSON number with a dot (37.2).
+  The ONE exception is `pain_score` (see below), which you may map from words to a number.
 
 The note is written in Slovak.
 
@@ -30,6 +31,10 @@ Note: "5-mesačné dojča, mierna nádcha, pije dobre. SpO2 98 %, teplota 37,2 �
 → vitals: spo2 = 98, temp = 37.2.
 → discriminators: avpu_unresponsive = absent, altered_consciousness = absent ("čulé" = alert).
 → everything else: unknown / null.
+
+Note: "8-ročné dieťa, neznesiteľne silná bolesť hlavy, bez zvracania."
+→ vitals: pain_score = 10 (unbearable pain, no number given → top of the verbal scale).
+→ discriminators: everything: unknown.
 
 Additional findings:
 - on_oxygen: `present` if the child is receiving supplemental oxygen (nasal cannula, mask,
@@ -47,8 +52,18 @@ Additional findings:
   stated.
 - reduced_urine_output: `present` if there are fewer wet diapers or markedly reduced urine.
   `unknown` if not stated.
-- pain_score: an integer 0–10 ONLY if a numeric pain score is explicitly stated in the note;
-  otherwise leave it `null`. Do NOT infer a score from adjectives like "silná bolesť".
+- pain_score: an integer 0–10 for pain intensity. Resolve it in this order:
+    1. If a numeric score is stated ("7/10", "bolesť 8"), use that number.
+    2. Otherwise, if pain is described only in words, map the descriptor to the verbal
+       rating scale:
+         - no pain / "bez bolesti" → 0
+         - mild / "mierna" → 2
+         - moderate / "stredne silná" → 5
+         - severe / "silná" → 8
+         - very severe, unbearable, excruciating, worst ever / "veľmi silná",
+           "neznesiteľná", "krutá", "najhoršia" → 10
+    3. If pain is not mentioned at all, return `null`.
+  This word→number mapping is UNIQUE to pain — never infer other vital numbers from words.
 
 ## User
 Complaint: {{complaint_category}} — {{complaint_text}}

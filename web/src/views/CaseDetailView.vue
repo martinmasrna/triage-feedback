@@ -11,9 +11,10 @@ const props = defineProps<{ id: string }>();
 const c = ref<DoctorCase | null>(null);
 const error = ref("");
 
-// Editing is limited to the comment — the agree/disagree itself is immutable.
+// Revisiting a saved case: the doctor may revise the agree/disagree and/or the comment.
 const editing = ref(false);
-const commentDraft = ref("");
+const editAgrees = ref<boolean | null>(null);
+const editComment = ref("");
 const saving = ref(false);
 
 // Pending cases (AI-prefilled, pre-triaged, verdict === null): the doctor's first-ever verdict.
@@ -57,16 +58,20 @@ async function submitVerdict() {
 }
 
 function startEdit() {
-  commentDraft.value = c.value?.verdict?.comment ?? "";
+  editAgrees.value = c.value?.verdict?.agrees ?? null;
+  editComment.value = c.value?.verdict?.comment ?? "";
   editing.value = true;
 }
 
-async function saveComment() {
-  if (!c.value) return;
+async function saveEdit() {
+  if (!c.value || editAgrees.value === null) return;
   saving.value = true;
   error.value = "";
   try {
-    c.value = await api.patchComment(c.value.id, commentDraft.value.trim());
+    c.value = await api.updateVerdict(c.value.id, {
+      agrees: editAgrees.value,
+      comment: editComment.value.trim() || undefined,
+    });
     editing.value = false;
   } catch (e) {
     error.value = (e as Error).message;
@@ -119,26 +124,49 @@ async function saveComment() {
           s rozhodnutím systému
         </p>
 
-        <!-- Comment: the only editable field. -->
+        <!-- Both the agree/disagree and the comment can be revised. -->
         <template v-if="!editing">
           <p v-if="c.verdict.comment"><strong>Komentár:</strong> {{ c.verdict.comment }}</p>
           <p v-else class="muted">Bez komentára.</p>
           <div class="actions">
-            <button type="button" class="btn btn-sm" @click="startEdit">Upraviť komentár</button>
+            <button type="button" class="btn btn-sm" @click="startEdit">Upraviť hodnotenie</button>
           </div>
         </template>
         <template v-else>
-          <label class="field">
-            <span>Komentár</span>
+          <div class="choice-row">
+            <button
+              type="button"
+              class="choice-btn choice-agree"
+              :class="{ selected: editAgrees === true }"
+              @click="editAgrees = true"
+            >
+              ✓ Súhlasím
+            </button>
+            <button
+              type="button"
+              class="choice-btn choice-disagree"
+              :class="{ selected: editAgrees === false }"
+              @click="editAgrees = false"
+            >
+              ✕ Nesúhlasím
+            </button>
+          </div>
+          <label class="field" style="margin-top: 1rem">
+            <span>Komentár <span class="muted">(voliteľné)</span></span>
             <textarea
-              v-model="commentDraft"
+              v-model="editComment"
               rows="3"
               placeholder="Vysvetlenie vášho hodnotenia — prečítal systém prípad zle, alebo zle rozhodol?"
             ></textarea>
           </label>
-          <p class="muted small">Hodnotenie (súhlas/nesúhlas) nie je možné meniť — upraviť možno len komentár.</p>
           <div class="actions">
-            <button type="button" class="btn btn-primary" :disabled="saving" @click="saveComment">
+            <button
+              type="button"
+              class="btn btn-primary"
+              :class="{ 'is-dim': editAgrees === null }"
+              :disabled="saving || editAgrees === null"
+              @click="saveEdit"
+            >
               <span v-if="saving" class="spinner"></span> Uložiť
             </button>
             <button type="button" class="btn btn-ghost" :disabled="saving" @click="editing = false">Zrušiť</button>

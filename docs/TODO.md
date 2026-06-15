@@ -1,8 +1,14 @@
 # TODO — next session
 
-Status: full stack built and working (server 61 tests green; Vue UI runs, verified). Backend = engine + LLM reader (real model, StubReader fallback) + SQLite store + export + Hono API. See docs/spec.md for design, README.md to run. This file = the agreed next-session work.
+Status: full stack built and working (server: 89 tests green; Vue UI runs, verified). Backend = engine + LLM reader (real model, StubReader fallback) + SQLite store + export + Hono API. See docs/spec.md (v1.2) for design, README.md to run. This file = the agreed next-session work.
 
-> Flow simplified 2026-06-11 (user’s team). The doctor no longer assigns a triage color. The verdict is now a simple agree / disagree with the system’s decision, plus one optional free-text comment. This removed: doctor color, the color_reason/system_critique split, the blind-first/informed modes (and web/src/settings.ts), the anti-anchoring gate, and the derived agreement distance. The doctor always sees the system result first. docs/spec.md reconciled (v1.1).
+> Flow simplified 2026-06-11 (user’s team). The doctor no longer assigns a triage color — the verdict is a simple agree / disagree + one optional comment, and the doctor always sees the system result first. See docs/spec.md change log for the full list of what that removed.
+
+## Recently done (2026-06-15) — see docs/spec.md v1.2
+- **Extraction moved up-front + pre-fills the form.** New `POST /api/extract` reads the note on step 1→2 and pre-fills vitals/discriminators; the decision is taken on the doctor’s reviewed form (form authoritative, clearing a value wins); the original extraction is still stored as the research record.
+- **Editable verdicts.** `PATCH /api/cases/:id` now edits the agree/disagree as well as the comment.
+- **Silent `verdict_changed` flag** on the stored record (sticky; admin/export only; new CSV column).
+- **`pain_score` inferred from words** (verbal rating scale); extraction prompts bumped 0.1.0 → 0.2.0 (en+sk).
 
 ---
 
@@ -34,7 +40,11 @@ Coverage instrument: the cases improvisation misses. Target ~30: ~9 red-flag flo
 - Rule order audit
   - Verify most dangerous RED rules appear first; confirm intended tie-breaks within each color after inserting new rules.
 
-## 4. Clinician sign-offs
+## 4. Tech debt
+- [x] **Fixed the 2 pre-existing test failures** (not feature-related): `makeApp()` in `server/test/api.test.ts` now passes `adminEnabled` for the “admin endpoints expose the full record” and “export.csv/json” suites, which previously hit the disabled-admin 404. All 89 tests green.
+- [ ] **Consider an `updated_at` / revision count** if post-hoc verdict edits need a fuller audit trail than the current single `verdict_changed` bit.
+
+## 5. Clinician sign-offs
 - [ ] Clinical sign-off on docs/triage-rules-provisional.md — the one true blocker for real use.
 - [ ] - Translation/terminology QA (Slovak labels) -- Native Slovak clinical review of new/edited label_sk strings for clarity and consistency.
 - [ ] fever ≥ 38 → YELLOW was encoded but flagged ambiguous in the draft rules — confirm with clinicians.
