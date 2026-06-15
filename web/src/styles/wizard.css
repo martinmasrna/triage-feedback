@@ -1,69 +1,157 @@
 @layer components {
   /* Age: a single "logarithmic" slider (days → months → years), with
      +/- nudge buttons and a label showing the current value + unit. */
-  .age-slider-row {
-    @apply flex items-center gap-3;
-  }
-  .age-slider-btn {
-    @apply flex-none flex items-center justify-center font-semibold;
-    width: 2rem;
-    height: 2rem;
-    border-radius: 999px;
-    background: var(--color-surface-soft);
-    color: var(--color-muted);
-    border: 1px solid var(--color-border-strong);
-    font-size: 1.1rem;
-    line-height: 1;
-    cursor: pointer;
-    transition:
-      background-color 0.12s,
-      color 0.12s;
-  }
-  .age-slider-btn:hover {
-    background: var(--color-border);
-    color: var(--color-text);
-  }
-  .age-slider {
-    @apply flex-1;
-    -webkit-appearance: none;
-    appearance: none;
-    height: 6px;
-    border-radius: 999px;
-    background: var(--color-border);
-    outline: none;
-  }
-  .age-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 1.25rem;
-    height: 1.25rem;
-    border-radius: 50%;
-    background: var(--color-primary);
-    border: 3px solid #fff;
-    box-shadow: 0 0 0 1px var(--color-primary);
-    cursor: pointer;
-  }
-  .age-slider::-moz-range-thumb {
-    width: 1.25rem;
-    height: 1.25rem;
-    border-radius: 50%;
-    background: var(--color-primary);
-    border: 3px solid #fff;
-    box-shadow: 0 0 0 1px var(--color-primary);
-    cursor: pointer;
-  }
-  .age-slider-value {
-    @apply flex-none text-sm font-semibold text-center;
-    min-width: 6rem;
-    padding: 0.4rem 0.75rem;
-    border-radius: 0.6rem;
-    background: var(--color-primary-soft);
-    color: var(--color-primary-hover);
-  }
-  .age-slider-row.invalid .age-slider-value {
-    color: var(--color-triage-red);
-    background: #fef2f2;
-  }
+.age-slider-row {
+  @apply flex items-center gap-3;
+}
+
+.age-slider-btn {
+  @apply flex-none relative;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  background: var(--color-surface-soft);
+  color: var(--color-muted);
+  border: 1px solid var(--color-border-strong);
+  cursor: pointer;
+  transition: background-color 0.12s, color 0.12s;
+}
+.age-slider-btn:hover {
+  background: var(--color-border);
+  color: var(--color-text);
+}
+.age-slider-btn::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 0.75rem;
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+}
+.age-slider-btn--plus::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 2px;
+  height: 0.75rem;
+  border-radius: 2px;
+  background: currentColor;
+}
+
+.age-slider-wrap {
+  @apply flex-1 relative;
+  --thumb: 1.25rem;
+  --rail: 6px;
+  height: var(--rail);
+  border-radius: 999px;
+  background: transparent;
+}
+.age-slider-wrap::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: calc(var(--thumb) / 2);
+  right: calc(var(--thumb) / 2);
+  height: var(--rail);
+  transform: translateY(-50%);
+  border-radius: 999px;
+  background: var(--color-border);
+}
+
+.age-slider {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  transform: translateY(-50%);
+  -webkit-appearance: none;
+  appearance: none;
+  height: var(--thumb);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  outline: none;
+  z-index: 1;
+}
+.age-slider::-webkit-slider-runnable-track {
+  height: var(--rail);
+  background: transparent;
+}
+.age-slider::-moz-range-track {
+  height: var(--rail);
+  background: transparent;
+}
+.age-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: var(--thumb);
+  height: var(--thumb);
+  margin-top: calc((var(--rail) - var(--thumb)) / 2);
+  border-radius: 50%;
+  background: var(--color-primary);
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 1px var(--color-primary);
+  cursor: pointer;
+}
+.age-slider::-moz-range-thumb {
+  width: var(--thumb);
+  height: var(--thumb);
+  border-radius: 50%;
+  background: var(--color-primary);
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 1px var(--color-primary);
+  cursor: pointer;
+}
+
+.age-slider-value {
+  @apply flex-none text-sm font-semibold text-center;
+  width: 7rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 0.6rem;
+  background: var(--color-primary-soft);
+  color: var(--color-primary-hover);
+  white-space: nowrap;
+}
+.age-slider-row.invalid .age-slider-value {
+  color: var(--color-triage-red);
+  background: #fef2f2;
+}
+
+.age-slider:focus,
+.age-slider:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  --tw-ring-offset-shadow: 0 0 #0000 !important;
+  --tw-ring-shadow: 0 0 #0000 !important;
+}
+.age-slider::-moz-focus-outer {
+  border: 0 !important;
+}
+.age-slider-wrap:focus-within {
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: transparent !important;
+  --tw-ring-offset-shadow: 0 0 #0000 !important;
+  --tw-ring-shadow: 0 0 #0000 !important;
+}
+.age-slider-wrap::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 999px;
+  pointer-events: none;
+  box-shadow: none;
+  transition: box-shadow 0.12s;
+}
+.age-slider-wrap:has(.age-slider:focus-visible)::after {
+  box-shadow: 0 0 0 2px var(--color-primary);
+}
 
   /* ── Tri-state / severity segmented controls ─────────────────────────── */
   .discriminators {

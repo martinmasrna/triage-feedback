@@ -8,9 +8,9 @@ import { createApp } from "../src/api/app.js";
 
 const ruleSet = loadRuleSet();
 
-function makeApp(reader: Reader = new StubReader()) {
+function makeApp(reader: Reader = new StubReader(), opts: { adminEnabled?: boolean } = {}) {
   const store = new InMemoryCaseStore();
-  const app = createApp({ store, reader, ruleSet });
+  const app = createApp({ store, reader, ruleSet }, opts);
   return { app, store };
 }
 
@@ -86,6 +86,106 @@ describe("POST /api/evaluate", () => {
     const body = (await res.json()) as any;
     expect(body.decision.color).toBe("RED");
     expect(body.decision.decisive.name).toBe("apnoea");
+  });
+});
+
+describe("POST /api/extract", () => {
+  it("reads the note into structured findings without deciding a color", async () => {
+    const handler = (_req: LlmCompletionRequest) =>
+      JSON.stringify({ vitals: { spo2: 88 }, discriminators: { apnoea: "present" } });
+    const reader = new LlmReader(new MockLlmClient(handler, "mock-model"), loadReaderPrompts());
+    const { app } = makeApp(reader);
+
+    const res = await post(app, "/api/extract", {
+      age: { value: 1, unit: "years" },
+      complaint_category: "respiratory",
+      note: "Občas prestáva dýchať.",
+    });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as any;
+    expect(body.ok).toBe(true);
+    expect(body.vitals.spo2).toBe(88);
+    expect(body.discriminators.apnoea).toBe("present");
+    expect(body.model_id).toBe("mock-model");
+    expect("color" in body).toBe(false); // extraction never decides
+  });
+
+  it("rejects an invalid case with 400", async () => {
+    const { app } = makeApp();
+    const res = await post(app, "/api/extract", { complaint_category: "respiratory" }); // no age
+    expect(res.status).toBe(400);
+  });
+});
+
+describe("POST /api/evaluate with a pre-computed extraction (pre-fill flow)", () => {
+  const aiReadApnoea = {
+    vitals: {},
+    discriminators: { apnoea: "present" },
+    ok: true,
+    model_id: "mock-model",
+    prompt_version: "test",
+  };
+
+  it("decides on the entered form — a finding the doctor cleared does NOT fire", async () => {
+    const { app, store } = makeApp(); // reader unused: extraction is supplied by the client
+    const res = await post(app, "/api/evaluate", {
+      age: { value: 1, unit: "years" },
+      complaint_category: "respiratory",
+      note: "Občas prestáva dýchať.",
+      vitals: {},
+      discriminators: { apnoea: "unknown" }, // doctor reviewed the pre-fill and cleared it
+      extraction: aiReadApnoea,
+    });
+    const body = (await res.json()) as any;
+    expect(body.decision.decisive).toBeNull();
+    expect(body.decision.color).not.toBe("RED");
+    expect(body.extraction_ok).toBe(true);
+
+    // The original AI read is stored verbatim, distinct from what the doctor entered.
+    const saved = (await (
+      await post(app, "/api/cases", { draftId: body.draftId, verdict: { agrees: true } })
+    ).json()) as any;
+    const full = store.get(saved.id)!;
+    expect(full.extraction!.discriminators.apnoea).toBe("present"); // what the AI read
+    expect(full.effective.discriminators.apnoea).toBe("unknown"); // what the engine decided on
+    expect(full.entered.discriminators.apnoea).toBe("unknown"); // what the doctor entered
+  });
+
+  it("keeps a finding the doctor accepted (pre-filled and left in the form)", async () => {
+    const { app } = makeApp();
+    const res = await post(app, "/api/evaluate", {
+      age: { value: 1, unit: "years" },
+      complaint_category: "respiratory",
+      note: "Občas prestáva dýchať.",
+      vitals: {},
+      discriminators: { apnoea: "present" }, // pre-filled by the AI, accepted by the doctor
+      extraction: aiReadApnoea,
+    });
+    const body = (await res.json()) as any;
+    expect(body.decision.color).toBe("RED");
+    expect(body.decision.decisive.name).toBe("apnoea");
+  });
+
+  it("does not call the reader when the extraction is supplied", async () => {
+    let extractCalls = 0;
+    const handler = (req: LlmCompletionRequest) => {
+      const schema = req.schema as { properties?: Record<string, unknown> } | undefined;
+      if (schema?.properties?.color) return JSON.stringify({ color: "GREEN" }); // second opinion
+      extractCalls += 1;
+      return JSON.stringify({ vitals: {}, discriminators: {} });
+    };
+    const reader = new LlmReader(new MockLlmClient(handler, "mock-model"), loadReaderPrompts());
+    const { app } = makeApp(reader);
+
+    await post(app, "/api/evaluate", {
+      age: { value: 1, unit: "years" },
+      complaint_category: "respiratory",
+      note: "x",
+      vitals: {},
+      discriminators: {},
+      extraction: aiReadApnoea,
+    });
+    expect(extractCalls).toBe(0); // the note was already read at /extract
   });
 });
 
@@ -175,6 +275,27 @@ describe("POST /api/cases (save) and retrieval", () => {
     expect(reread.verdict.comment).toBe("po zvážení: systém rozhodol správne");
   });
 
+  it("lets the doctor revise the agree/disagree verdict (PATCH)", async () => {
+    const draftId = await evaluateAndDraft(hypoxiaCase);
+    const saved = (await (
+      await post(app, "/api/cases", { draftId, verdict: { agrees: true, comment: "pôvodne súhlas" } })
+    ).json()) as any;
+    expect(saved.verdict.agrees).toBe(true);
+
+    const res = await app.request(`/api/cases/${saved.id}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ agrees: false, comment: "po zvážení nesúhlas" }),
+    });
+    expect(res.status).toBe(200);
+    const patched = (await res.json()) as any;
+    expect(patched.verdict.agrees).toBe(false);
+    expect(patched.verdict.comment).toBe("po zvážení nesúhlas");
+
+    const reread = (await (await app.request(`/api/cases/${saved.id}`)).json()) as any;
+    expect(reread.verdict.agrees).toBe(false);
+  });
+
   it("PATCH on a missing case is 404", async () => {
     const res = await app.request("/api/cases/nope", {
       method: "PATCH",
@@ -182,6 +303,44 @@ describe("POST /api/cases (save) and retrieval", () => {
       body: JSON.stringify({ comment: "x" }),
     });
     expect(res.status).toBe(404);
+  });
+});
+
+describe("verdict_changed (silent revision tracking)", () => {
+  function patch(app: ReturnType<typeof makeApp>["app"], id: string, body: unknown) {
+    return app.request(`/api/cases/${id}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  }
+
+  async function savedCase(app: ReturnType<typeof makeApp>["app"], agrees: boolean) {
+    const draftId = ((await (await post(app, "/api/evaluate", hypoxiaCase)).json()) as any).draftId;
+    return (await (await post(app, "/api/cases", { draftId, verdict: { agrees } })).json()) as any;
+  }
+
+  it("starts false, stays false on a comment-only edit, and never leaks to the doctor view", async () => {
+    const { app, store } = makeApp();
+    const saved = await savedCase(app, true);
+    expect(store.get(saved.id)!.verdict_changed).toBe(false);
+    expect("verdict_changed" in saved).toBe(false); // stripped by the doctor projection
+
+    await patch(app, saved.id, { comment: "len komentár" });
+    expect(store.get(saved.id)!.verdict_changed).toBe(false);
+    const doctorView = (await (await app.request(`/api/cases/${saved.id}`)).json()) as any;
+    expect("verdict_changed" in doctorView).toBe(false);
+  });
+
+  it("flips to true when the agree/disagree is revised, and stays true even if flipped back", async () => {
+    const { app, store } = makeApp();
+    const saved = await savedCase(app, true);
+
+    await patch(app, saved.id, { agrees: false });
+    expect(store.get(saved.id)!.verdict_changed).toBe(true);
+
+    await patch(app, saved.id, { agrees: true }); // back to the original
+    expect(store.get(saved.id)!.verdict_changed).toBe(true); // sticky
   });
 });
 
@@ -252,7 +411,7 @@ describe("POST /api/cases/:id/verdict (pending AI-prefilled cases)", () => {
 
 describe("admin endpoints expose the full record", () => {
   it("admin list/detail include the silent fields the doctor view strips", async () => {
-    const { app } = makeApp();
+    const { app } = makeApp(new StubReader(), { adminEnabled: true });
     const draftId = ((await (await post(app, "/api/evaluate", hypoxiaCase)).json()) as any).draftId;
     const saved = (await (
       await post(app, "/api/cases", { draftId, verdict: { agrees: true } })
@@ -272,7 +431,7 @@ describe("admin endpoints expose the full record", () => {
 
 describe("export endpoints", () => {
   it("export.csv and export.json return the saved cases", async () => {
-    const { app } = makeApp();
+    const { app } = makeApp(new StubReader(), { adminEnabled: true });
     const draftId = ((await (await post(app, "/api/evaluate", hypoxiaCase)).json()) as any).draftId;
     await post(app, "/api/cases", { draftId, verdict: { agrees: true } });
 

@@ -70,6 +70,7 @@ describe("assembleCase", () => {
     expect(c.verdict?.agrees).toBe(false);
     expect(c.verdict?.comment).toBe("looks septic, I'd go red");
     expect(c.source).toBe("doctor");
+    expect(c.verdict_changed).toBe(false); // never revised yet
     expect(c.effective.vitals.temp).toBe(38.6);
     expect(c.second_opinion?.color).toBe("ORANGE");
     expect(c.provenance.rule_set_version).toBe("0.1.0-draft");
@@ -181,6 +182,7 @@ describe("export", () => {
   it("toCSV emits a header and escapes commas, quotes, and newlines", () => {
     const csv = toCSV([c]);
     expect(csv.startsWith("id,created_at,source,age_value")).toBe(true);
+    expect(csv.split("\r\n")[0]).toContain("verdict_changed");
     const [, ...rest] = csv.split("\r\n");
     expect(rest).toHaveLength(1);
     const line = rest[0]!;

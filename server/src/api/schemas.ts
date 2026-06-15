@@ -34,6 +34,24 @@ export const EnteredCaseSchema = z.object({
   discriminators: z.record(z.string(), triState).default({}),
 });
 
+// The findings the reader produced from the note, as round-tripped by the browser. The note is
+// read once (at step 1 → 2) to pre-fill the form; the same extraction is sent back at /evaluate so
+// the original AI read is stored verbatim, distinct from whatever the doctor ended up entering.
+export const ExtractionResultSchema = z.object({
+  vitals: VitalsSchema.default({}),
+  discriminators: z.record(z.string(), triState).default({}),
+  ok: z.boolean(),
+  model_id: z.string(),
+  prompt_version: z.string(),
+});
+
+// /evaluate accepts the entered case plus, optionally, the pre-computed extraction from the
+// pre-fill step. When present the server skips re-reading the note (it is deterministic) and the
+// decision is taken on the entered form alone — the doctor's review is authoritative.
+export const EvaluateRequestSchema = EnteredCaseSchema.extend({
+  extraction: ExtractionResultSchema.optional(),
+});
+
 export const VerdictSchema = z.object({
   agrees: z.boolean(),
   comment: z.string().optional(),
@@ -44,13 +62,17 @@ export const SaveSchema = z.object({
   verdict: VerdictSchema,
 });
 
-// Editing a saved case: the doctor may only revise their free-text comment. The agree/disagree
-// itself stays immutable (it is the primary datapoint, recorded at the moment of review).
-export const CommentPatchSchema = z.object({
+// Editing a saved case: the doctor may revise their agree/disagree verdict and/or its free-text
+// comment. Both fields are optional so a caller can touch just one; a pending case (no verdict yet)
+// still goes through POST .../verdict first.
+export const VerdictPatchSchema = z.object({
+  agrees: z.boolean().optional(),
   comment: z.string().optional(),
 });
 
 export type EnteredCaseInput = z.infer<typeof EnteredCaseSchema>;
+export type EvaluateRequestInput = z.infer<typeof EvaluateRequestSchema>;
+export type ExtractionResultInput = z.infer<typeof ExtractionResultSchema>;
 export type VerdictInput = z.infer<typeof VerdictSchema>;
 export type SaveInput = z.infer<typeof SaveSchema>;
-export type CommentPatchInput = z.infer<typeof CommentPatchSchema>;
+export type VerdictPatchInput = z.infer<typeof VerdictPatchSchema>;

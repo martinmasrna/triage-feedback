@@ -204,6 +204,12 @@
     @apply flex items-center gap-2 mt-3;
     color: var(--color-muted);
   }
+  /* On a filled (primary) button the teal spinner is invisible — render it white instead. */
+  .btn-primary .spinner,
+  button.btn-primary .spinner {
+    border-color: rgba(255, 255, 255, 0.4);
+    border-top-color: #fff;
+  }
   @keyframes spin {
     to {
       transform: rotate(360deg);

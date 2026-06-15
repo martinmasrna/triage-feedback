@@ -9,6 +9,7 @@ import type {
   DoctorCase,
   EnteredCase,
   EvaluateResponse,
+  ExtractionResult,
   FormOptions,
   TriState,
 } from "../types";
@@ -80,6 +81,15 @@ const ageSliderLabel = computed(() => {
   return `${value} ${pluralSk(value, "rok", "roky", "rokov")}`;
 });
 
+// The note is read once, on the step 1 → 2 transition, to pre-fill vitals + discriminators. The
+// result is kept and sent back at evaluate time so the original AI read is stored as-is, distinct
+// from whatever the doctor ends up entering.
+const extraction = ref<ExtractionResult | null>(null);
+const extracting = ref(false);
+// Signature of the step-1 inputs the current extraction was based on — lets us re-read only when
+// the note/complaint actually changed, so navigating back and forward never clobbers doctor edits.
+let extractedSig = "";
+
 const draft = ref<EvaluateResponse | null>(null);
 const evaluating = ref(false);
 const agrees = ref<boolean | null>(null);
@@ -143,13 +153,49 @@ function validateStep1(): boolean {
 
 async function next() {
   error.value = "";
-  if (step.value === 1 && !validateStep1()) return;
+  if (step.value === 1) {
+    if (!validateStep1()) return;
+    // Read the note before showing step 2 so vitals + discriminators land pre-filled.
+    await runExtract();
+  }
   if (step.value < 4) {
     step.value += 1;
     maxStep.value = Math.max(maxStep.value, step.value);
     // Entering the final step evaluates immediately — the result is the point of this screen.
     // Once evaluated, the case data is locked, so this only ever runs once.
     if (step.value === 4 && !draft.value) await runEvaluate();
+  }
+}
+
+// Returns the signature of the step-1 inputs the extraction depends on (the note + complaint).
+function step1Signature(): string {
+  return JSON.stringify([form.complaint_category, form.complaint_text.trim(), form.note.trim()]);
+}
+
+// Read the note into structured findings and pre-fill the form. Never throws and never blocks
+// progress: a read failure just means the doctor fills everything by hand (and step 4 flags it).
+async function runExtract(): Promise<void> {
+  const sig = step1Signature();
+  if (extraction.value && sig === extractedSig) return; // inputs unchanged — keep current edits
+  extracting.value = true;
+  error.value = "";
+  try {
+    const result = await api.extract({
+      age: { value: Number(form.ageValue), unit: form.ageUnit },
+      complaint_category: form.complaint_category,
+      complaint_text: form.complaint_text.trim() || undefined,
+      note: form.note.trim() || undefined,
+      vitals: {},
+      discriminators: {},
+    });
+    extraction.value = result;
+    form.vitals = { ...result.vitals };
+    form.discriminators = { ...result.discriminators };
+  } catch {
+    extraction.value = null; // evaluate falls back to reading the note server-side
+  } finally {
+    extractedSig = sig;
+    extracting.value = false;
   }
 }
 
@@ -172,7 +218,7 @@ async function runEvaluate(): Promise<void> {
   evaluating.value = true;
   error.value = "";
   try {
-    draft.value = await api.evaluate(buildEntered());
+    draft.value = await api.evaluate(buildEntered(), extraction.value);
   } catch (e) {
     error.value = (e as Error).message;
   } finally {
@@ -207,6 +253,9 @@ function reset() {
   form.vitals = {};
   form.discriminators = {};
   fieldErrors.age = fieldErrors.complaint = fieldErrors.complaintText = fieldErrors.note = undefined;
+  extraction.value = null;
+  extracting.value = false;
+  extractedSig = "";
   draft.value = null;
   evaluating.value = false;
   agrees.value = null;
@@ -267,27 +316,31 @@ function reset() {
           <div class="age-slider-row" :class="{ invalid: fieldErrors.age }">
             <button
               type="button"
-              class="age-slider-btn"
+              class="age-slider-btn age-slider-btn--minus"
               tabindex="-1"
+              aria-label="Znížiť vek"
               :disabled="ageSliderIndex <= 0 || locked"
               @click="ageSliderIndex = Math.max(0, ageSliderIndex - 1)"
-            >−</button>
-            <input
-              class="age-slider"
-              type="range"
-              min="0"
-              :max="AGE_SLIDER_MAX"
-              step="1"
-              :disabled="locked"
-              v-model.number="ageSliderIndex"
-            />
+            ></button>
+            <div class="age-slider-wrap">
+              <input
+                class="age-slider"
+                type="range"
+                min="0"
+                :max="AGE_SLIDER_MAX"
+                step="1"
+                :disabled="locked"
+                v-model.number="ageSliderIndex"
+              />
+            </div>
             <button
               type="button"
-              class="age-slider-btn"
+              class="age-slider-btn age-slider-btn--plus"
               tabindex="-1"
+              aria-label="Zvýšiť vek"
               :disabled="ageSliderIndex >= AGE_SLIDER_MAX || locked"
               @click="ageSliderIndex = Math.min(AGE_SLIDER_MAX, ageSliderIndex + 1)"
-            >+</button>
+            ></button>
             <div class="age-slider-value">{{ ageSliderLabel }}</div>
           </div>
           <span v-if="fieldErrors.age" class="field-error">{{ fieldErrors.age }}</span>
@@ -337,8 +390,15 @@ function reset() {
         </section>
 
         <div class="actions actions-end">
-          <button type="button" class="btn btn-primary" :class="{ 'is-dim': !step1Valid }" @click="next">
-            Ďalej →
+          <button
+            type="button"
+            class="btn btn-primary"
+            :class="{ 'is-dim': !step1Valid }"
+            :disabled="extracting"
+            @click="next"
+          >
+            <template v-if="extracting"><span class="spinner"></span> Čítam záznam…</template>
+            <template v-else>Ďalej →</template>
           </button>
         </div>
       </div>

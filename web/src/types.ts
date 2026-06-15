@@ -69,6 +69,13 @@ export interface Findings {
   discriminators: Record<string, TriState>;
 }
 
+/** What the reader read from the note. Returned by /api/extract; round-tripped back to /api/evaluate. */
+export interface ExtractionResult extends Findings {
+  ok: boolean;
+  model_id: string;
+  prompt_version: string;
+}
+
 export interface StoredCase {
   id: string;
   created_at: string;
@@ -80,8 +87,7 @@ export interface StoredCase {
   effective: Findings;
   decision: Decision;
   second_opinion: { color: Color; model_id: string; prompt_version: string } | null;
-  /** null = awaiting doctor review (pending). */
-  verdict: Verdict | null;
+  verdict: Verdict | null;   /* null = awaiting doctor review (pending). */
   provenance: {
     rule_set_version: string;
     extractor_model_id: string | null;
@@ -103,8 +109,7 @@ export interface DoctorCase {
   source: CaseSource;
   entered: EnteredCase;
   decision: Decision;
-  /** null = awaiting doctor review (pending). */
-  verdict: Verdict | null;
+  verdict: Verdict | null;   /* null = awaiting doctor review (pending). */
   provenance: {
     rule_set_version: string;
     created_at: string;

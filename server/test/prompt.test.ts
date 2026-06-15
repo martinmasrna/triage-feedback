@@ -58,7 +58,7 @@ describe("loadPrompt (real files)", () => {
   it("loads the shipped English-default extraction and second-opinion prompts", () => {
     const extraction = loadPrompt("extraction");
     expect(extraction.meta.id).toBe("extraction");
-    expect(extraction.meta.version).toBe("0.1.0-en");
+    expect(extraction.meta.version).toBe("0.2.0-en");
     expect(extraction.system).toBeTruthy();
     expect(extraction.user).toContain("{{note}}");
     expect(extraction.user).toContain("{{discriminator_list}}");
@@ -69,7 +69,19 @@ describe("loadPrompt (real files)", () => {
   });
 
   it("loads the Slovak A/B variants with -sk versions", () => {
-    expect(loadPrompt("extraction.sk").meta.version).toBe("0.1.0-sk");
+    expect(loadPrompt("extraction.sk").meta.version).toBe("0.2.0-sk");
     expect(loadPrompt("second-opinion.sk").meta.version).toBe("0.1.0-sk");
+  });
+
+  // The real word→score behaviour needs a live model; this guards the *instruction* that drives it,
+  // so a future prompt edit can't silently revert to "explicit numbers only".
+  it("instructs the model to map qualitative pain to a numeric pain_score", () => {
+    for (const name of ["extraction", "extraction.sk"]) {
+      const text = `${loadPrompt(name).system}`;
+      expect(text).toContain("pain_score");
+      expect(text).toContain("neznesiteľn"); // unbearable → top of the verbal scale
+      // the old "explicit numbers only" prohibition must be gone
+      expect(text).not.toMatch(/Do NOT infer a score|NEDOMÝŠĽAJ/);
+    }
   });
 });

@@ -1,6 +1,6 @@
 ---
 id: extraction
-version: 0.1.0-sk
+version: 0.2.0-sk
 description: Slovak-instructions variant of the extraction prompt (for A/B vs the English default).
 temperature: 0
 ---
@@ -16,6 +16,7 @@ Pravidlá:
 - Pri vitálnych funkciách vráť číslo IBA ak je v texte konkrétna hodnota. Ak je hodnota
   spomenutá len slovne (napr. „má horúčku“ bez čísla), vráť `null` — nevymýšľaj číslo.
   Slovenské desatinné čísla majú čiarku („37,2“); vráť JSON číslo s bodkou (37.2).
+  JEDINOU výnimkou je `pain_score` (viď nižšie), ktoré smieš odvodiť zo slov na číslo.
 
 Príklady:
 
@@ -28,6 +29,10 @@ Záznam: „5-mesačné dojča, mierna nádcha, pije dobre. SpO2 98 %, teplota 3
 → vitals: spo2 = 98, temp = 37.2.
 → discriminators: avpu_unresponsive = absent, altered_consciousness = absent („čulé“).
 → všetko ostatné: unknown / null.
+
+Záznam: „8-ročné dieťa, neznesiteľne silná bolesť hlavy, bez zvracania.“
+→ vitals: pain_score = 10 (neznesiteľná bolesť, bez čísla → vrchol verbálnej škály).
+→ discriminators: všetko: unknown.
 
 Ďalšie nálezy:
 - on_oxygen: `present`, ak dieťa dostáva kyslík (nazálne okuliare, maska, HFNC, CPAP/BiPAP,
@@ -46,8 +51,16 @@ Záznam: „5-mesačné dojča, mierna nádcha, pije dobre. SpO2 98 %, teplota 3
   `unknown`, ak nie je uvedené.
 - reduced_urine_output: `present`, ak je menej mokrých plienok alebo výrazne znížené
   močenie. `unknown`, ak nie je uvedené.
-- pain_score: celé číslo 0–10 IBA ak je v zázname uvedené konkrétne číselné skóre bolesti;
-  inak `null`. Skóre si NEDOMÝŠĽAJ z prídavných mien ako "silná bolesť".
+- pain_score: celé číslo 0–10 pre intenzitu bolesti. Urči ho v tomto poradí:
+    1. Ak je uvedené číselné skóre („7/10“, „bolesť 8“), použi to číslo.
+    2. Inak, ak je bolesť opísaná len slovne, priraď opis na verbálnu škálu:
+         - žiadna / „bez bolesti“ → 0
+         - mierna → 2
+         - stredne silná → 5
+         - silná → 8
+         - veľmi silná, neznesiteľná, krutá, najhoršia → 10
+    3. Ak bolesť nie je vôbec spomenutá, vráť `null`.
+  Toto priradenie slovo→číslo platí IBA pre bolesť — iné vitálne čísla zo slov NEODVODZUJ.
 
 ## User
 Dôvod príchodu: {{complaint_category}} — {{complaint_text}}
