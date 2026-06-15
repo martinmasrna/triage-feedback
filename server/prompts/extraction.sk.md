@@ -29,6 +29,26 @@ Záznam: „5-mesačné dojča, mierna nádcha, pije dobre. SpO2 98 %, teplota 3
 → discriminators: avpu_unresponsive = absent, altered_consciousness = absent („čulé“).
 → všetko ostatné: unknown / null.
 
+Ďalšie nálezy:
+- on_oxygen: `present`, ak dieťa dostáva kyslík (nazálne okuliare, maska, HFNC, CPAP/BiPAP,
+  ventilátor). `absent`, ak je v zázname explicitne uvedený vzduch/ambientný vzduch
+  ("vzduch", "bez kyslíka"). `unknown`, ak nie je uvedené.
+- pat_appearance_abnormal: `present`, ak dieťa "vyzerá choro" (znížený tonus, neinteraguje,
+  letargické, neutíšiteľné). `absent`, ak je výslovne v poriadku ("vzhľad v norme", "čulé").
+  `unknown`, ak nie je uvedené.
+- pat_wob_abnormal: `present`, ak je zvýšená dychová práca (tachypnoe, zaťahovanie, alárne
+  dýchanie, grunting). `absent`, ak je dychová práca explicitne normálna. `unknown`, ak nie je
+  uvedené.
+- pat_circulation_abnormal: `present`, ak je bledosť, mramorovanie, cyanóza alebo chladné
+  akrálne časti. `absent`, ak je perfúzia/farba kože explicitne normálna. `unknown`, ak nie je
+  uvedené.
+- poor_feeding: `present`, ak opatrovateľ uvádza zlý príjem tekutín/stravy u dojčaťa.
+  `unknown`, ak nie je uvedené.
+- reduced_urine_output: `present`, ak je menej mokrých plienok alebo výrazne znížené
+  močenie. `unknown`, ak nie je uvedené.
+- pain_score: celé číslo 0–10 IBA ak je v zázname uvedené konkrétne číselné skóre bolesti;
+  inak `null`. Skóre si NEDOMÝŠĽAJ z prídavných mien ako "silná bolesť".
+
 ## User
 Dôvod príchodu: {{complaint_category}} — {{complaint_text}}
 

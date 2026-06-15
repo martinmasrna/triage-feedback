@@ -27,6 +27,7 @@ const hypoxiaCase = {
   complaint_category: "respiratory",
   note: "Ťažko dýcha.",
   vitals: { spo2: 80 },
+  discriminators: { on_oxygen: "absent" },
 };
 
 describe("GET /api/health and /api/form-options", () => {

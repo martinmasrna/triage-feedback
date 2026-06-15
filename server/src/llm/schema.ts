@@ -1,5 +1,5 @@
 import { COLORS } from "../engine/types.js";
-import { DISCRIMINATOR_KEYS, VITAL_KEYS } from "../engine/vocabulary.js";
+import { DISCRIMINATOR_KEYS, VITALS, VITAL_KEYS } from "../engine/vocabulary.js";
 
 // JSON Schemas that constrain the model's output so it cannot return malformed data. Generated
 // from the canonical vocabulary (engine/vocabulary.ts) — the same source the prompts inject —
@@ -8,8 +8,11 @@ import { DISCRIMINATOR_KEYS, VITAL_KEYS } from "../engine/vocabulary.js";
 /** Schema for the extraction call: every vital nullable, every discriminator a tri-state. */
 export function buildExtractionSchema(): object {
   const vitals: Record<string, object> = {};
-  for (const key of VITAL_KEYS) {
-    vitals[key] = { type: ["number", "null"] };
+  for (const v of VITALS) {
+    const schema: Record<string, unknown> = { type: ["number", "null"] };
+    if (v.min !== undefined) schema.minimum = v.min;
+    if (v.max !== undefined) schema.maximum = v.max;
+    vitals[v.key] = schema;
   }
 
   const discriminators: Record<string, object> = {};

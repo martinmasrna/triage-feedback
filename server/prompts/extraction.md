@@ -31,6 +31,25 @@ Note: "5-mesačné dojča, mierna nádcha, pije dobre. SpO2 98 %, teplota 37,2 �
 → discriminators: avpu_unresponsive = absent, altered_consciousness = absent ("čulé" = alert).
 → everything else: unknown / null.
 
+Additional findings:
+- on_oxygen: `present` if the child is receiving supplemental oxygen (nasal cannula, mask,
+  HFNC, CPAP/BiPAP, ventilator). `absent` if the note explicitly says room/ambient air
+  ("vzduch", "bez kyslíka"). `unknown` if not stated.
+- pat_appearance_abnormal: `present` if the child "looks unwell" (poor tone, not interacting,
+  lethargic, inconsolable). `absent` if explicitly well-appearing ("vzhľad v norme", "čulé").
+  `unknown` if not stated.
+- pat_wob_abnormal: `present` if there is increased work of breathing (tachypnea, retractions,
+  nasal flaring, grunting). `absent` if breathing effort is explicitly normal. `unknown` if
+  not stated.
+- pat_circulation_abnormal: `present` if pallor, mottling, cyanosis, or cool peripheries are
+  described. `absent` if perfusion/color is explicitly normal. `unknown` if not stated.
+- poor_feeding: `present` if the caregiver reports poor intake in an infant. `unknown` if not
+  stated.
+- reduced_urine_output: `present` if there are fewer wet diapers or markedly reduced urine.
+  `unknown` if not stated.
+- pain_score: an integer 0–10 ONLY if a numeric pain score is explicitly stated in the note;
+  otherwise leave it `null`. Do NOT infer a score from adjectives like "silná bolesť".
+
 ## User
 Complaint: {{complaint_category}} — {{complaint_text}}
 
