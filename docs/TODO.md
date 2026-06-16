@@ -44,6 +44,13 @@ Coverage instrument: the cases improvisation misses. Target ~30: ~9 red-flag flo
 ## 4. Tech debt
 - [x] **Fixed the 2 pre-existing test failures** (not feature-related): `makeApp()` in `server/test/api.test.ts` now passes `adminEnabled` for the “admin endpoints expose the full record” and “export.csv/json” suites, which previously hit the disabled-admin 404. All 89 tests green.
 - [ ] **Consider an `updated_at` / revision count** if post-hoc verdict edits need a fuller audit trail than the current single `verdict_changed` bit.
+- [ ] **Retire the categorical pain discriminators** (`severe_pain`, `moderate_pain`) — pain is now collected only as the 0–10 `pain_score` vital, so these are doctor-uncollectable (web hides them via `LLM_ONLY_KEYS`) and fully redundant with the `*_score` rules (same colors). The extraction prompt already maps verbal pain to a `pain_score` number, so the categorical path buys nothing and risks double-representation. Steps:
+  - `server/src/engine/vocabulary.ts` — remove the two `DISCRIMINATORS` entries (auto-drops them from the prompt `{{discriminator_list}}` and the extraction schema).
+  - `server/rules/triage-rules.yaml` — delete the `severe_pain` and `moderate_pain` rules; **rename** `severe_pain_score` → `severe_pain` and `moderate_pain_score` → `moderate_pain` (the `_score` suffix only existed to disambiguate from the categorical ones); fix the discriminator list in the header comment (~lines 32–33).
+  - `web/src/discriminatorGroups.ts` — remove `LLM_ONLY_KEYS` and the pain-pair folding (first confirm it doesn't share the 4-state severity-folding code path with the resp-distress / dehydration pairs).
+  - `docs/triage-rules-provisional.md` + `server/test/triage-rules.newdata.test.ts` — update references/assertions (including the renamed rule names).
+  - Bump the extraction prompt version 0.2.0 → 0.3.0 (en + sk), since the rendered discriminator list changes.
+  - Run the server suite afterward.
 
 ## 5. Clinician sign-offs
 - [ ] Clinical sign-off on docs/triage-rules-provisional.md — the one true blocker for real use.
