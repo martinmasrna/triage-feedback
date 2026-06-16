@@ -1,0 +1,34 @@
+# Seed cases — curated mock presentations for the triage labeling tool.
+#
+# Each entry is an EnteredCase (age + complaint + Slovak note + optional vitals/discriminators) plus
+# optional coverage metadata. Loaded by server/src/domain/seeds.ts and served at GET /api/seeds; the
+# entry-screen picker pre-fills the wizard from one. The decision is NEVER taken from a seed — the
+# case runs through the live extractor + engine when walked through, so expected_color/expected_rule
+# are only the author's expectation for coverage tracking, not a verdict.
+#
+# Fields per case:
+#   id              (optional)  stable slug; auto-derived from complaint+age if omitted
+#   intent          (optional)  human label shown in the picker; auto-derived if omitted
+#   age             { value, unit: days|months|years }
+#   complaint_category          one of the known categories
+#   complaint_text  (optional)  free-text refinement (required by the form only for "other")
+#   note                        rich Slovak prose (also exercises the extractor)
+#   vitals          (optional)  known vital keys → numbers (pain_score 0–10)
+#   discriminators  (optional)  known discriminator keys → present|absent|unknown
+#   expected_color  (optional)  RED|ORANGE|YELLOW|GREEN|BLUE  (coverage tag)
+#   expected_rule   (optional)  expected decisive rule name   (coverage tag)
+#
+# This file currently holds one example to prove the wiring; the full ~30-case set is authored
+# separately (see docs/TODO.md §1).
+
+- id: infant-fever-lethargy
+  intent: "Dojča 18 m · horúčka, malátnosť, znížený príjem tekutín"
+  age: { value: 18, unit: months }
+  complaint_category: fever
+  note: >
+    18-mesačné dievčatko, horúčka do 39,4 °C od včera večera. Matka hovorí, že je nezvyčajne malátne
+    a spí viac ako obvykle, tekutiny prijíma len málo. Bez vyrážky, bez kŕčov, dýcha bez väčšej námahy.
+  vitals: { hr: 118, rr: 28, spo2: 97 }
+  discriminators: {}
+  expected_color: YELLOW
+  expected_rule: fever

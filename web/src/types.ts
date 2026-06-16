@@ -38,6 +38,20 @@ export interface EnteredCase {
   discriminators: Record<string, TriState>;
 }
 
+/** A curated mock case from GET /api/seeds, used to pre-fill the entry wizard. */
+export interface SeedCase {
+  id: string;
+  intent: string;
+  age: { value: number; unit: AgeUnit };
+  complaint_category: string;
+  complaint_text?: string;
+  note: string;
+  vitals: Record<string, number>;
+  discriminators: Record<string, TriState>;
+  expected_color?: Color;
+  expected_rule?: string;
+}
+
 export interface FiredRule {
   name: string;
   label_sk: string;

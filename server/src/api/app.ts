@@ -16,6 +16,7 @@ import {
 
 import type { EnteredCase, ExtractionResult, Findings, SecondOpinion, Verdict } from "../domain/caseTypes.js";
 import { assembleCase, mergeFindings } from "../domain/derive.js";
+import type { SeedCase } from "../domain/seeds.js";
 import type { CaseStore, ListFilter } from "../store/caseStore.js";
 import type { Reader } from "../llm/reader.js";
 import { toCSV, toJSON } from "../export/exportCases.js";
@@ -32,6 +33,8 @@ export interface ApiDeps {
   store: CaseStore;
   reader: Reader;
   ruleSet: RuleSet;
+  /** Curated mock cases served at GET /api/seeds for the entry-screen picker. Defaults to none. */
+  seeds?: SeedCase[];
 }
 
 export interface ApiOptions {
@@ -94,6 +97,10 @@ export function createApp(deps: ApiDeps, opts: ApiOptions = {}): Hono {
       colors: COLORS,
     }),
   );
+
+  // Curated mock cases for the entry-screen picker. Read-only; the decision is still taken live when
+  // a seed is loaded and walked through.
+  app.get("/api/seeds", (c) => c.json(deps.seeds ?? []));
 
   // Read the note into structured findings (vitals + discriminators) without deciding anything.
   // Called on the step 1 → 2 transition to pre-fill the form. Returns the full extraction so the
