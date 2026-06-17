@@ -1,22 +1,21 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { ref, watch } from "vue";
 import { useRoute } from "vue-router";
+import { Stethoscope } from "lucide-vue-next";
 import { api } from "./api";
+import { formatAge } from "./labels";
 import { useVocab } from "./vocab";
 import { requestNewCase } from "./newCaseSignal";
-import type { AgeUnit, DoctorCase } from "./types";
+import type { DoctorCase } from "./types";
 
 const route = useRoute();
 const { complaintLabel } = useVocab();
 
-const RECENT_LIMIT = 6;
-const AGE_UNIT_SHORT: Record<AgeUnit, string> = { days: "dní", months: "mes.", years: "r." };
-
 const pending = ref<DoctorCase[]>([]);
-const pendingTotal = ref(0);
+const evaluated = ref<DoctorCase[]>([]);
 const own = ref<DoctorCase[]>([]);
-const ownTotal = ref(0);
 const pendingExpanded = ref(true);
+const evaluatedExpanded = ref(false);
 const ownExpanded = ref(true);
 const sidebarCollapsed = ref(localStorage.getItem("sidebarCollapsed") === "1");
 
@@ -28,15 +27,10 @@ function toggleSidebar() {
 async function loadRecent() {
   try {
     const all = await api.list();
-    // Server returns newest-first; guard with a sort in case that ever changes.
     all.sort((a, b) => b.created_at.localeCompare(a.created_at));
-    // Pending = AI-prefilled, pre-triaged cases awaiting the doctor's verdict.
-    const pendingAll = all.filter((c) => c.verdict === null);
-    const ownAll = all.filter((c) => c.verdict !== null);
-    pendingTotal.value = pendingAll.length;
-    ownTotal.value = ownAll.length;
-    pending.value = pendingAll.slice(0, RECENT_LIMIT);
-    own.value = ownAll.slice(0, RECENT_LIMIT);
+    pending.value = all.filter((c) => c.verdict === null);
+    evaluated.value = all.filter((c) => c.source === "ai_generated" && c.verdict !== null);
+    own.value = all.filter((c) => c.source === "doctor");
   } catch {
     // Sidebar is non-critical; stay silent and leave the lists empty.
   }
@@ -45,25 +39,9 @@ async function loadRecent() {
 // Refresh whenever navigation lands somewhere (covers "saved a new case" → list/detail).
 watch(() => route.fullPath, loadRecent, { immediate: true });
 
-const crumb = computed(() => {
-  switch (route.name) {
-    case "new":
-      return { section: "Prípady", page: "Nový prípad" };
-    case "cases":
-      return { section: "Prípady", page: "Vlastné prípady" };
-    case "case":
-      return { section: "Vlastné prípady", page: "Detail prípadu" };
-    case "admin-cases":
-      return { section: "Admin", page: "Prípady" };
-    case "admin-case":
-      return { section: "Admin", page: "Detail prípadu" };
-    default:
-      return { section: "Prípady", page: "" };
-  }
-});
 
 function caseTitle(c: DoctorCase): string {
-  return `${c.entered.age.value} ${AGE_UNIT_SHORT[c.entered.age.unit]} · ${complaintLabel(c.entered.complaint_category)}`;
+  return `${formatAge(c.entered.age.value, c.entered.age.unit)} · ${complaintLabel(c.entered.complaint_category)}`;
 }
 
 function relativeTime(iso: string): string {
@@ -113,17 +91,18 @@ function relativeTime(iso: string): string {
           <span v-if="!sidebarCollapsed">Nový prípad</span>
         </RouterLink>
 
-        <RouterLink v-if="sidebarCollapsed" to="/cases" class="nav-item" title="Prípady">
+        <RouterLink to="/cases" class="nav-item" :title="sidebarCollapsed ? 'Všetky prípady' : undefined">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10" /></svg>
+          <span v-if="!sidebarCollapsed">Všetky prípady</span>
         </RouterLink>
 
-        <template v-else>
-          <!-- AI-prefilled, pre-triaged cases awaiting the doctor's verdict. -->
+        <template v-if="!sidebarCollapsed">
+          <!-- AI-prefilled cases awaiting the doctor's verdict. -->
           <div class="side-group">
             <div class="group-head" @click="pendingExpanded = !pendingExpanded">
               <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 3" /></svg>
               Na posúdenie
-              <span v-if="pendingTotal" class="count">{{ pendingTotal }}</span>
+              <span v-if="pending.length" class="count">{{ pending.length }}</span>
               <svg class="chev" :class="{ collapsed: !pendingExpanded }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
             </div>
 
@@ -136,16 +115,34 @@ function relativeTime(iso: string): string {
                 </span>
               </RouterLink>
               <p v-if="!pending.length" class="side-empty">Žiadne prípady na posúdenie.</p>
-              <RouterLink v-if="pendingTotal > pending.length" to="/cases" class="see-all">Zobraziť všetky →</RouterLink>
             </div>
           </div>
 
-          <!-- Cases the doctor has already reviewed (entered and/or given a verdict on). -->
+          <!-- AI-generated cases the doctor has already evaluated. -->
+          <div class="side-group">
+            <div class="group-head" @click="evaluatedExpanded = !evaluatedExpanded">
+              <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" /><polyline points="9 12 11 14 15 10" /></svg>
+              Posúdené
+              <svg class="chev" :class="{ collapsed: !evaluatedExpanded }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
+            </div>
+
+            <div v-show="evaluatedExpanded" class="case-list">
+              <RouterLink v-for="c in evaluated" :key="c.id" :to="`/cases/${c.id}`" class="case-row">
+                <span class="swatch" :class="`s-${c.decision.color.toLowerCase()}`"></span>
+                <span class="case-meta">
+                  <span class="ttl">{{ caseTitle(c) }}</span>
+                  <span class="sub">{{ relativeTime(c.created_at) }}</span>
+                </span>
+              </RouterLink>
+              <p v-if="!evaluated.length" class="side-empty">Žiadne posúdené prípady.</p>
+            </div>
+          </div>
+
+          <!-- Cases entered manually by the doctor. -->
           <div class="side-group">
             <div class="group-head" @click="ownExpanded = !ownExpanded">
-              <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10" /></svg>
+              <Stethoscope class="ic" :stroke-width="2.2" />
               Vlastné prípady
-              <span v-if="ownTotal" class="count">{{ ownTotal }}</span>
               <svg class="chev" :class="{ collapsed: !ownExpanded }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
             </div>
 
@@ -158,7 +155,6 @@ function relativeTime(iso: string): string {
                 </span>
               </RouterLink>
               <p v-if="!own.length" class="side-empty">Zatiaľ žiadne prípady.</p>
-              <RouterLink v-if="ownTotal > own.length" to="/cases" class="see-all">Zobraziť všetky →</RouterLink>
             </div>
           </div>
         </template>
@@ -167,11 +163,7 @@ function relativeTime(iso: string): string {
 
     <!-- ── Content panel ────────────────────────────────────────────────── -->
     <div class="panel">
-      <div class="topbar">
-        <span class="crumb">{{ crumb.section }} <template v-if="crumb.page">/ <b>{{ crumb.page }}</b></template></span>
-      </div>
-
-      <main class="page-container">
+      <main class="page-container" :class="{ 'page-container--wide': route.name === 'cases' }">
         <RouterView />
       </main>
     </div>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
 import { api } from "../api";
-import { PENDING_LABEL, SOURCE_LABEL, TRISTATE_LABEL, VERDICT_LABEL } from "../labels";
+import { formatAge, PENDING_LABEL, SOURCE_LABEL, TRISTATE_LABEL, VERDICT_LABEL } from "../labels";
 import { useVocab } from "../vocab";
 import type { StoredCase, TriState } from "../types";
 import ColorChip from "../components/ColorChip.vue";
@@ -9,7 +9,7 @@ import RuleExplanation from "../components/RuleExplanation.vue";
 
 const { complaintLabel, discriminatorLabel, vitalLabel, vitalUnit } = useVocab();
 
-const props = defineProps<{ id: string }>();
+const props = defineProps<{ id: number }>();
 const c = ref<StoredCase | null>(null);
 const error = ref("");
 
@@ -48,7 +48,7 @@ function discEntries(d: Record<string, TriState>): [string, TriState][] {
     <div class="card">
       <h3>Zadané údaje</h3>
       <p>
-        <strong>Vek:</strong> {{ c.entered.age.value }} {{ c.entered.age.unit }} ·
+        <strong>Vek:</strong> {{ formatAge(c.entered.age.value, c.entered.age.unit) }} ·
         <strong>Dôvod:</strong> {{ complaintLabel(c.entered.complaint_category) }}
         <span v-if="c.entered.complaint_text"> — {{ c.entered.complaint_text }}</span>
       </p>

@@ -2,6 +2,8 @@
 import { computed, onMounted, reactive, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { api } from "../api";
+import { AGE_SLIDER_MAX, ageToIndex, indexToAge } from "../ageSlider";
+import { formatAge } from "../labels";
 import { groupDiscriminators } from "../discriminatorGroups";
 import { newCaseSignal } from "../newCaseSignal";
 import type {
@@ -11,13 +13,11 @@ import type {
   EvaluateResponse,
   ExtractionResult,
   FormOptions,
-  SeedCase,
   TriState,
 } from "../types";
 import { categoryIcon } from "../categoryIcons";
 import CaseSummaryCard from "../components/CaseSummaryCard.vue";
 import ColorChip from "../components/ColorChip.vue";
-import RuleExplanation from "../components/RuleExplanation.vue";
 import VerdictForm from "../components/VerdictForm.vue";
 import VitalsForm from "../components/VitalsForm.vue";
 import DiscriminatorsForm from "../components/DiscriminatorsForm.vue";
@@ -28,8 +28,6 @@ const STEPS = ["Základné údaje", "Vitálne funkcie", "Klinické nálezy", "V�
 const step = ref(1);
 const maxStep = ref(1);
 const options = ref<FormOptions | null>(null);
-const seeds = ref<SeedCase[]>([]);
-const selectedSeedId = ref("");
 const error = ref("");
 
 const form = reactive({
@@ -41,26 +39,9 @@ const form = reactive({
   vitals: {} as Record<string, number>,
   discriminators: {} as Record<string, TriState>,
 });
-const fieldErrors = reactive<{ age?: string; complaint?: string; complaintText?: string; note?: string }>({});
+const fieldErrors = reactive<{ age?: string; complaint?: string; complaintText?: string }>({});
 
 // ── Age slider ────────────────────────────────────────────────────────────
-// A single "logarithmic" slider: 0–90 days (+1 day steps), then 4–36 months
-// (+1 month steps), then 4–18 years (+1 year steps). 90 days and 36 months
-// double as the 3-month / 3-year handover points.
-const AGE_SLIDER_MAX = 90 + (36 - 3) + (18 - 3);
-
-function ageToIndex(value: number, unit: AgeUnit): number {
-  if (unit === "days") return Math.min(90, Math.max(0, value));
-  if (unit === "months") return Math.min(123, Math.max(91, 90 + (value - 3)));
-  return Math.min(AGE_SLIDER_MAX, Math.max(124, 123 + (value - 3)));
-}
-
-function indexToAge(index: number): { value: number; unit: AgeUnit } {
-  if (index <= 90) return { value: index, unit: "days" };
-  if (index <= 123) return { value: 3 + (index - 90), unit: "months" };
-  return { value: 3 + (index - 123), unit: "years" };
-}
-
 const ageSliderIndex = computed<number>({
   get: () => (form.ageValue === null ? 0 : ageToIndex(form.ageValue, form.ageUnit)),
   set: (index) => {
@@ -70,18 +51,10 @@ const ageSliderIndex = computed<number>({
   },
 });
 
-function pluralSk(n: number, one: string, few: string, many: string): string {
-  if (n === 1) return one;
-  if (n >= 2 && n <= 4) return few;
-  return many;
-}
-
 const ageSliderLabel = computed(() => {
   const value = form.ageValue ?? 0;
   const unit = form.ageValue === null ? "days" : form.ageUnit;
-  if (unit === "days") return `${value} ${pluralSk(value, "deň", "dni", "dní")}`;
-  if (unit === "months") return `${value} ${pluralSk(value, "mesiac", "mesiace", "mesiacov")}`;
-  return `${value} ${pluralSk(value, "rok", "roky", "rokov")}`;
+  return formatAge(value, unit);
 });
 
 // The note is read once, on the step 1 → 2 transition, to pre-fill vitals + discriminators. The
@@ -106,8 +79,7 @@ const step1Valid = computed(
     !!form.ageValue &&
     form.ageValue > 0 &&
     !!form.complaint_category &&
-    (form.complaint_category !== "other" || !!form.complaint_text.trim()) &&
-    !!form.note.trim(),
+    (form.complaint_category !== "other" || !!form.complaint_text.trim()),
 );
 
 // Clear the "Iné" detail text (and its error) once the doctor picks a different reason.
@@ -129,32 +101,7 @@ onMounted(async () => {
   } catch (e) {
     error.value = `Nepodarilo sa načítať formulár: ${(e as Error).message}`;
   }
-  // Seed cases are optional — a load failure just hides the picker, never blocks entry.
-  try {
-    seeds.value = await api.seeds();
-  } catch {
-    seeds.value = [];
-  }
 });
-
-// Load a curated mock case into the form (step 1). Vitals/discriminators are pre-filled from the
-// seed but kept editable; on "Ďalej" the extractor still reads the note and fills only the gaps
-// (seed values win — see runExtract). The decision is never taken from the seed itself.
-function applySeed() {
-  const seed = seeds.value.find((s) => s.id === selectedSeedId.value);
-  if (!seed) return;
-  form.ageValue = seed.age.value;
-  form.ageUnit = seed.age.unit;
-  form.complaint_category = seed.complaint_category;
-  form.complaint_text = seed.complaint_text ?? "";
-  form.note = seed.note;
-  form.vitals = { ...seed.vitals };
-  form.discriminators = { ...seed.discriminators };
-  // Re-arm extraction so the note is re-read (and merged) on the next step.
-  extraction.value = null;
-  extractedSig = "";
-  fieldErrors.age = fieldErrors.complaint = fieldErrors.complaintText = fieldErrors.note = undefined;
-}
 
 // "Nový prípad" was clicked while already on this view — start over.
 watch(newCaseSignal, () => reset());
@@ -175,8 +122,7 @@ function validateStep1(): boolean {
   fieldErrors.complaint = !form.complaint_category ? "Vyberte dôvod príchodu." : undefined;
   fieldErrors.complaintText =
     form.complaint_category === "other" && !form.complaint_text.trim() ? "Spresnite dôvod príchodu." : undefined;
-  fieldErrors.note = !form.note.trim() ? "Zadajte triážny záznam (poznámku)." : undefined;
-  return !fieldErrors.age && !fieldErrors.complaint && !fieldErrors.complaintText && !fieldErrors.note;
+  return !fieldErrors.age && !fieldErrors.complaint && !fieldErrors.complaintText;
 }
 
 async function next() {
@@ -203,6 +149,7 @@ function step1Signature(): string {
 // Read the note into structured findings and pre-fill the form. Never throws and never blocks
 // progress: a read failure just means the doctor fills everything by hand (and step 4 flags it).
 async function runExtract(): Promise<void> {
+  if (!form.note.trim()) return;
   const sig = step1Signature();
   if (extraction.value && sig === extractedSig) return; // inputs unchanged — keep current edits
   extracting.value = true;
@@ -256,17 +203,17 @@ async function runEvaluate(): Promise<void> {
   }
 }
 
-const canSave = computed(() => !!draft.value && agrees.value !== null && !saving.value);
+const canSave = computed(() => !!draft.value && !saving.value);
 
 async function save() {
-  if (!draft.value || agrees.value === null) return;
+  if (!draft.value) return;
   saving.value = true;
   error.value = "";
   try {
-    saved.value = await api.save(draft.value.draftId, {
-      agrees: agrees.value,
-      comment: comment.value.trim() || undefined,
-    });
+    const verdict = agrees.value !== null
+      ? { agrees: agrees.value, comment: comment.value.trim() || undefined }
+      : null;
+    saved.value = await api.save(draft.value.draftId, verdict);
   } catch (e) {
     error.value = (e as Error).message;
   } finally {
@@ -282,8 +229,7 @@ function reset() {
   form.note = "";
   form.vitals = {};
   form.discriminators = {};
-  selectedSeedId.value = "";
-  fieldErrors.age = fieldErrors.complaint = fieldErrors.complaintText = fieldErrors.note = undefined;
+  fieldErrors.age = fieldErrors.complaint = fieldErrors.complaintText = undefined;
   extraction.value = null;
   extracting.value = false;
   extractedSig = "";
@@ -305,13 +251,18 @@ function reset() {
     <div class="card">
       <h1>Prípad uložený ✓</h1>
       <p class="agreement">
-        Systém: <ColorChip :color="saved.decision.color" /> · vaše hodnotenie:
-        <strong>{{ saved.verdict!.agrees ? "súhlas" : "nesúhlas" }}</strong>
+        Systém: <ColorChip :color="saved.decision.color" />
+        <template v-if="saved.verdict">
+          · vaše hodnotenie: <strong>{{ saved.verdict.agrees ? "súhlas" : "nesúhlas" }}</strong>
+        </template>
+        <template v-else>
+          · <em>čaká na vaše hodnotenie</em>
+        </template>
       </p>
       <div class="actions">
         <button type="button" class="btn btn-primary" @click="reset">Nový prípad</button>
         <button type="button" class="btn" @click="router.push(`/cases/${saved.id}`)">Zobraziť detail</button>
-        <button type="button" class="btn btn-ghost" @click="router.push('/cases')">Moje prípady</button>
+        <button type="button" class="btn btn-ghost" @click="router.push('/cases')">Všetky prípady</button>
       </div>
     </div>
   </section>
@@ -342,19 +293,6 @@ function reset() {
     <template v-if="options">
       <!-- STEP 1: BASIC INFO -->
       <div v-show="step === 1" class="card">
-        <section v-if="seeds.length" class="form-section seed-picker-section">
-          <h3 class="section-label">Načítať ukážkový prípad <span class="muted small">(voliteľné)</span></h3>
-          <select
-            class="seed-picker"
-            :disabled="locked"
-            v-model="selectedSeedId"
-            @change="applySeed"
-          >
-            <option value="">— vyberte ukážkový prípad —</option>
-            <option v-for="s in seeds" :key="s.id" :value="s.id">{{ s.intent }}</option>
-          </select>
-        </section>
-
         <section class="form-section">
           <h3 class="section-label">Vek <span class="req">*</span></h3>
           <div class="age-slider-row" :class="{ invalid: fieldErrors.age }">
@@ -376,6 +314,13 @@ function reset() {
                 :disabled="locked"
                 v-model.number="ageSliderIndex"
               />
+              <div class="age-slider-ticks" aria-hidden="true">
+                <span class="ast" style="--pos: 21.7%">30 dní</span>
+                <span class="ast" style="--pos: 43.5%">60 dní</span>
+                <span class="ast" style="--pos: 65.2%">3 mes.</span>
+                <span class="ast" style="--pos: 89.1%">3 roky</span>
+                <span class="ast ast--end">18 r.</span>
+              </div>
             </div>
             <button
               type="button"
@@ -422,15 +367,13 @@ function reset() {
         </section>
 
         <section class="form-section">
-          <h3 class="section-label">Triážny záznam <span class="req">*</span></h3>
+          <h3 class="section-label">Triážny záznam <span class="muted">(voliteľné)</span></h3>
           <textarea
             v-model="form.note"
             rows="3"
             placeholder="Krátka poznámka ako pri reálnej triáži, vrátane podrobností (napr. typ a závažnosť úrazu)."
-            :class="{ invalid: fieldErrors.note }"
             :disabled="locked"
           ></textarea>
-          <span v-if="fieldErrors.note" class="field-error">{{ fieldErrors.note }}</span>
         </section>
 
         <div class="actions actions-end">
@@ -501,13 +444,10 @@ function reset() {
             Systém nedokázal spoľahlivo prečítať poznámku. Rozhodnutie vychádza zo štruktúrovaných polí.
           </div>
 
-          <div class="card">
-            <RuleExplanation :decision="draft.decision" />
-          </div>
-
           <VerdictForm
             v-model:agrees="agrees"
             v-model:comment="comment"
+            :decision="draft.decision"
             :submitting="saving"
             :can-submit="canSave"
             submit-label="Uložiť prípad"

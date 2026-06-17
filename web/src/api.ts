@@ -5,7 +5,6 @@ import type {
   ExtractionResult,
   FormOptions,
   ListFilter,
-  SeedCase,
   StoredCase,
   Verdict,
 } from "./types";
@@ -29,9 +28,6 @@ const jsonHeaders = { "content-type": "application/json" };
 export const api = {
   formOptions: () => fetch("/api/form-options").then((r) => jsonOrThrow<FormOptions>(r)),
 
-  /** Curated mock cases for the entry-screen picker. */
-  seeds: () => fetch("/api/seeds").then((r) => jsonOrThrow<SeedCase[]>(r)),
-
   /** Read the note into structured findings, to pre-fill vitals + discriminators (step 1 → 2). */
   extract: (entered: EnteredCase) =>
     fetch("/api/extract", { method: "POST", headers: jsonHeaders, body: JSON.stringify(entered) }).then((r) =>
@@ -45,7 +41,7 @@ export const api = {
       body: JSON.stringify(extraction ? { ...entered, extraction } : entered),
     }).then((r) => jsonOrThrow<EvaluateResponse>(r)),
 
-  save: (draftId: string, verdict: Verdict) =>
+  save: (draftId: string, verdict: Verdict | null) =>
     fetch("/api/cases", { method: "POST", headers: jsonHeaders, body: JSON.stringify({ draftId, verdict }) }).then((r) =>
       jsonOrThrow<DoctorCase>(r),
     ),
@@ -53,16 +49,16 @@ export const api = {
   // ── Doctor-facing reads: stripped of the silent fields by the server. ──
   list: (filter: ListFilter = {}) => fetch(`/api/cases${listQuery(filter)}`).then((r) => jsonOrThrow<DoctorCase[]>(r)),
 
-  get: (id: string) => fetch(`/api/cases/${id}`).then((r) => jsonOrThrow<DoctorCase>(r)),
+  get: (id: number) => fetch(`/api/cases/${id}`).then((r) => jsonOrThrow<DoctorCase>(r)),
 
   /** Revise a saved case's verdict — the agree/disagree, the comment, or both. */
-  updateVerdict: (id: string, verdict: Verdict) =>
+  updateVerdict: (id: number, verdict: Verdict) =>
     fetch(`/api/cases/${id}`, { method: "PATCH", headers: jsonHeaders, body: JSON.stringify(verdict) }).then(
       (r) => jsonOrThrow<DoctorCase>(r),
     ),
 
   /** Submit the initial verdict for a pending (AI-prefilled, pre-triaged) case. Can only be done once. */
-  submitVerdict: (id: string, verdict: Verdict) =>
+  submitVerdict: (id: number, verdict: Verdict) =>
     fetch(`/api/cases/${id}/verdict`, { method: "POST", headers: jsonHeaders, body: JSON.stringify(verdict) }).then(
       (r) => jsonOrThrow<DoctorCase>(r),
     ),
@@ -71,7 +67,7 @@ export const api = {
   adminList: (filter: ListFilter = {}) =>
     fetch(`/api/admin/cases${listQuery(filter)}`).then((r) => jsonOrThrow<StoredCase[]>(r)),
 
-  adminGet: (id: string) => fetch(`/api/admin/cases/${id}`).then((r) => jsonOrThrow<StoredCase>(r)),
+  adminGet: (id: number) => fetch(`/api/admin/cases/${id}`).then((r) => jsonOrThrow<StoredCase>(r)),
 };
 
 function listQuery(filter: ListFilter): string {

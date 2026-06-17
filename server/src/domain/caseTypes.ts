@@ -34,6 +34,8 @@ export interface ExtractionResult extends Findings {
   prompt_version: string;
   /** false when the LLM could not reliably read the note (the "continue on structured fields" case). */
   ok: boolean;
+  /** Present only when ok:false — the reason the extraction failed. Never stored. */
+  error?: string;
 }
 
 /** The LLM's independent triage color — stored silently, never shown as the decision. */
@@ -66,11 +68,14 @@ export interface Provenance {
 }
 
 export interface StoredCase {
-  id: string;
+  id: number;
   created_at: string;
 
   /** Whether the inputs were typed by a doctor or pre-filled by the AI pipeline. */
   source: CaseSource;
+
+  /** Stable slug from seeds.yaml — present only on cases inserted by the seed script. Used to skip already-seeded cases on re-run. */
+  seed_id?: string;
 
   /** Inputs exactly as entered. */
   entered: EnteredCase;
@@ -99,3 +104,6 @@ export interface StoredCase {
 
   provenance: Provenance;
 }
+
+/** A case that hasn't been persisted yet — no id assigned. */
+export type NewCase = Omit<StoredCase, "id">;

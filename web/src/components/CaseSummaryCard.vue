@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { AGE_UNIT_LABEL, TRISTATE_LABEL } from "../labels";
+import { formatAge, TRISTATE_LABEL } from "../labels";
 import { useVocab } from "../vocab";
 import type { AgeUnit, TriState } from "../types";
 
 const { complaintLabel, discriminatorLabel, vitalLabel, vitalUnit } = useVocab();
 
 const props = defineProps<{
-  title: string;
+  title?: string;
   age: { value: number; unit: AgeUnit };
   complaintCategory: string;
   complaintText?: string;
@@ -21,12 +21,12 @@ const discEntries = () => Object.entries(props.discriminators).filter(([, s]) =>
 
 <template>
   <div class="card">
-    <h3>{{ title }}</h3>
+    <h3 v-if="title">{{ title }}</h3>
 
     <div class="case-stats">
       <div class="stat">
         <span class="stat-label">Vek</span>
-        <span class="stat-value">{{ age.value }} {{ AGE_UNIT_LABEL[age.unit] }}</span>
+        <span class="stat-value">{{ formatAge(age.value, age.unit) }}</span>
       </div>
       <div class="stat">
         <span class="stat-label">Dôvod</span>

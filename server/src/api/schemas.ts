@@ -59,7 +59,7 @@ export const VerdictSchema = z.object({
 
 export const SaveSchema = z.object({
   draftId: z.string().min(1),
-  verdict: VerdictSchema,
+  verdict: VerdictSchema.nullable(),
 });
 
 // Editing a saved case: the doctor may revise their agree/disagree verdict and/or its free-text

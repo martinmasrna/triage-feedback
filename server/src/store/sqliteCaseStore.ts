@@ -1,5 +1,5 @@
 import Database from "better-sqlite3";
-import type { StoredCase } from "../domain/caseTypes.js";
+import type { NewCase, StoredCase } from "../domain/caseTypes.js";
 import { selectCases, type CaseStore, type ListFilter } from "./caseStore.js";
 
 // SQLite-backed store. Each case is one row: the full StoredCase lives losslessly in a JSON
@@ -9,7 +9,7 @@ import { selectCases, type CaseStore, type ListFilter } from "./caseStore.js";
 
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS cases (
-  id            TEXT PRIMARY KEY,
+  id            INTEGER PRIMARY KEY,
   created_at    TEXT NOT NULL,
   system_color  TEXT NOT NULL,
   source        TEXT NOT NULL DEFAULT 'doctor',
@@ -30,11 +30,30 @@ export class SqliteCaseStore implements CaseStore {
     this.db.exec(SCHEMA);
   }
 
-  save(c: StoredCase): void {
+  create(c: NewCase): StoredCase {
+    const info = this.db
+      .prepare(
+        `INSERT INTO cases (created_at, system_color, source, agrees, data)
+         VALUES (@created_at, @system_color, @source, @agrees, @data)`,
+      )
+      .run({
+        created_at: c.created_at,
+        system_color: c.decision.color,
+        source: c.source,
+        agrees: c.verdict === null ? null : c.verdict.agrees ? 1 : 0,
+        data: "{}",
+      });
+    const id = Number(info.lastInsertRowid);
+    const stored: StoredCase = { ...c, id };
+    this.db.prepare("UPDATE cases SET data = ? WHERE id = ?").run(JSON.stringify(stored), id);
+    return stored;
+  }
+
+  update(c: StoredCase): void {
     this.db
       .prepare(
-        `INSERT OR REPLACE INTO cases (id, created_at, system_color, source, agrees, data)
-         VALUES (@id, @created_at, @system_color, @source, @agrees, @data)`,
+        `UPDATE cases SET created_at = @created_at, system_color = @system_color,
+         source = @source, agrees = @agrees, data = @data WHERE id = @id`,
       )
       .run({
         id: c.id,
@@ -46,7 +65,7 @@ export class SqliteCaseStore implements CaseStore {
       });
   }
 
-  get(id: string): StoredCase | undefined {
+  get(id: number): StoredCase | undefined {
     const row = this.db.prepare("SELECT data FROM cases WHERE id = ?").get(id) as { data: string } | undefined;
     return row ? (JSON.parse(row.data) as StoredCase) : undefined;
   }

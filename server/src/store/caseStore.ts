@@ -1,4 +1,4 @@
-import type { StoredCase } from "../domain/caseTypes.js";
+import type { NewCase, StoredCase } from "../domain/caseTypes.js";
 
 /** Optional filters for the saved-cases list (Step 8: all cases, filterable). */
 export interface ListFilter {
@@ -11,8 +11,11 @@ export interface ListFilter {
  * in-memory store is sync). Swapping the backing store touches only an implementation of this.
  */
 export interface CaseStore {
-  save(c: StoredCase): void;
-  get(id: string): StoredCase | undefined;
+  /** Insert a new case; the store assigns the integer id and returns the complete stored record. */
+  create(c: NewCase): StoredCase;
+  /** Persist changes to an existing case by its known id. */
+  update(c: StoredCase): void;
+  get(id: number): StoredCase | undefined;
   /** Newest first. */
   list(filter?: ListFilter): StoredCase[];
   count(): number;
@@ -34,13 +37,20 @@ export function selectCases(all: Iterable<StoredCase>, filter?: ListFilter): Sto
 
 /** Simple in-memory store — used in tests and as the reference implementation. */
 export class InMemoryCaseStore implements CaseStore {
-  private readonly cases = new Map<string, StoredCase>();
+  private readonly cases = new Map<number, StoredCase>();
+  private nextId = 1;
 
-  save(c: StoredCase): void {
+  create(c: NewCase): StoredCase {
+    const stored: StoredCase = { ...c, id: this.nextId++ };
+    this.cases.set(stored.id, stored);
+    return stored;
+  }
+
+  update(c: StoredCase): void {
     this.cases.set(c.id, c);
   }
 
-  get(id: string): StoredCase | undefined {
+  get(id: number): StoredCase | undefined {
     return this.cases.get(id);
   }
 

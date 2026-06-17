@@ -2,7 +2,7 @@
 import { onMounted, reactive, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { api } from "../api";
-import { PENDING_LABEL, SOURCE_LABEL, VERDICT_LABEL } from "../labels";
+import { formatAge, PENDING_LABEL, SOURCE_LABEL, VERDICT_LABEL } from "../labels";
 import { useVocab } from "../vocab";
 import type { StoredCase } from "../types";
 import ColorChip from "../components/ColorChip.vue";
@@ -72,7 +72,7 @@ function formatTime(iso: string): string {
     <tbody>
       <tr v-for="c in cases" :key="c.id" class="clickable" @click="router.push(`/admin/cases/${c.id}`)">
         <td>{{ formatTime(c.created_at) }}</td>
-        <td>{{ c.entered.age.value }} {{ c.entered.age.unit }}</td>
+        <td>{{ formatAge(c.entered.age.value, c.entered.age.unit) }}</td>
         <td>{{ complaintLabel(c.entered.complaint_category) }}</td>
         <td>{{ SOURCE_LABEL[c.source] }}</td>
         <td><ColorChip :color="c.decision.color" /></td>

@@ -1,4 +1,4 @@
-import { serve } from "@hono/node-server";
+﻿import { serve } from "@hono/node-server";
 import { serveStatic } from "@hono/node-server/serve-static";
 import { basicAuth } from "hono/basic-auth";
 import { readFile } from "node:fs/promises";
@@ -7,7 +7,6 @@ import path from "node:path";
 import { loadRuleSet } from "./engine/index.js";
 import { SqliteCaseStore } from "./store/sqliteCaseStore.js";
 import { buildReader, loadServerEnv } from "./llm/buildReader.js";
-import { loadSeeds } from "./domain/seeds.js";
 import { createApp } from "./api/app.js";
 
 loadServerEnv();
@@ -17,7 +16,6 @@ loadServerEnv();
  *   PORT             default 8787
  *   DB_PATH          default ./cases.db
  *   RULES_PATH       optional (defaults to bundled provisional rules)
- *   SEEDS_PATH       optional (defaults to bundled server/seeds/seeds.yaml; missing → no seeds)
  *   LLAMA_URL        llama.cpp base URL (omit → StubReader)
  *   LLAMA_MODEL      stamped into provenance
  *   PROMPT_LANG      "en" (default) or "sk"
@@ -36,7 +34,6 @@ loadServerEnv();
 const ruleSet = loadRuleSet(process.env.RULES_PATH);
 const store = new SqliteCaseStore(process.env.DB_PATH ?? "cases.db");
 const reader = buildReader();
-const seeds = loadSeeds(process.env.SEEDS_PATH);
 
 const ADMIN_ENABLED = process.env.ADMIN_ENABLED === "true";
 const ADMIN_USER = process.env.ADMIN_USER;
@@ -51,7 +48,7 @@ const csp =
   "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:";
 
 const app = createApp(
-  { store, reader, ruleSet, seeds },
+  { store, reader, ruleSet },
   {
     adminEnabled: ADMIN_ENABLED,
     adminAuth: ADMIN_USER && ADMIN_PASS ? { username: ADMIN_USER, password: ADMIN_PASS } : undefined,
@@ -89,3 +86,4 @@ if (process.env.WEB_ROOT) {
 const port = Number(process.env.PORT ?? 8787);
 serve({ fetch: app.fetch, port });
 console.log(`[triage] API listening on http://127.0.0.1:${port} (rules ${ruleSet.version})`);
+

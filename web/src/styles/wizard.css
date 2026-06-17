@@ -153,6 +153,27 @@
   box-shadow: 0 0 0 2px var(--color-primary);
 }
 
+.age-slider-ticks {
+  position: absolute;
+  top: calc(var(--thumb) / 2 + 0.5rem);
+  left: calc(var(--thumb) / 2);
+  right: calc(var(--thumb) / 2);
+  pointer-events: none;
+}
+.ast {
+  position: absolute;
+  left: var(--pos, 0);
+  font-size: 0.68rem;
+  color: var(--color-muted);
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+.ast--end {
+  left: auto;
+  right: 0;
+  transform: none;
+}
+
   /* ── Tri-state / severity segmented controls ─────────────────────────── */
   .discriminators {
     @apply flex flex-col;
@@ -260,7 +281,11 @@
   }
   .choice-btn {
     @apply flex-1 rounded-xl font-semibold text-base;
-    padding: 0.9rem 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+    padding: 0.75rem 1rem;
     border: 2px solid var(--color-border-strong);
     background: var(--color-surface);
     color: var(--color-text);
@@ -271,24 +296,21 @@
       color 0.12s,
       box-shadow 0.12s;
   }
-  .choice-btn.choice-agree {
-    color: #4c7a64;
+  .choice-icon {
+    font-size: 1.75em;
+    line-height: 1;
   }
-  .choice-btn.choice-disagree {
-    color: #a3614c;
+  .choice-label {
+    font-size: 0.85em;
   }
-  .choice-btn:hover {
+  .choice-btn:hover:not(.selected) {
     background: var(--color-surface-soft);
   }
-  .choice-btn.choice-agree.selected {
-    background: #eaf2ee;
-    border-color: #7fab93;
-    color: #3f6b56;
-  }
+  .choice-btn.choice-agree.selected,
   .choice-btn.choice-disagree.selected {
-    background: #f6ece7;
-    border-color: #cf9a85;
-    color: #95543f;
+    background: #b3d9d9;
+    border-color: #9ecece;
+    color: #111827;
   }
 
   /* ── Rule explanation ────────────────────────────────────────────────── */
@@ -308,8 +330,8 @@
     padding: 0.35rem 0.5rem;
   }
   .fired-list li.decisive {
-    background: #fffbeb;
-    box-shadow: inset 0 0 0 1px #fde68a;
+    background: transparent;
+    box-shadow: none;
   }
   .fired-list .tag {
     @apply text-xs rounded-full;

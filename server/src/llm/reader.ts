@@ -80,9 +80,9 @@ export class LlmReader implements Reader {
         temperature: this.prompts.extraction.meta.temperature,
       });
       return mapExtraction(JSON.parse(raw), this.client.modelId, promptVersion);
-    } catch {
-      // The "LLM couldn't read the note" path: continue on the structured fields only.
-      return { vitals: {}, discriminators: {}, ok: false, model_id: this.client.modelId, prompt_version: promptVersion };
+    } catch (err) {
+      const error = err instanceof Error ? err.message : String(err);
+      return { vitals: {}, discriminators: {}, ok: false, model_id: this.client.modelId, prompt_version: promptVersion, error };
     }
   }
 

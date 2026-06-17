@@ -7,7 +7,7 @@ import type { CaseSource, EnteredCase, StoredCase, Verdict } from "../domain/cas
 // rule-set version (model/prompt ids are admin-only). This is enforced at the API boundary
 // by projecting through `toDoctorCase`, so the sensitive fields are never serialized to a doctor.
 export interface DoctorCase {
-  id: string;
+  id: number;
   created_at: string;
   source: CaseSource;
   entered: EnteredCase;

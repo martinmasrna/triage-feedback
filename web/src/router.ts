@@ -11,9 +11,9 @@ export const router = createRouter({
     // Doctor-facing.
     { path: "/", name: "new", component: NewCaseView },
     { path: "/cases", name: "cases", component: CasesListView },
-    { path: "/cases/:id", name: "case", component: CaseDetailView, props: true },
+    { path: "/cases/:id", name: "case", component: CaseDetailView, props: (route) => ({ id: Number(route.params.id) }) },
     // Admin/research — not linked from the doctor nav, reachable by URL. Full record + exports.
     { path: "/admin/cases", name: "admin-cases", component: AdminCasesListView },
-    { path: "/admin/cases/:id", name: "admin-case", component: AdminCaseDetailView, props: true },
+    { path: "/admin/cases/:id", name: "admin-case", component: AdminCaseDetailView, props: (route) => ({ id: Number(route.params.id) }) },
   ],
 });

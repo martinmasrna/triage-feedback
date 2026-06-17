@@ -29,7 +29,6 @@
     height: 2.5rem;
     flex: none;
     background: linear-gradient(160deg, #16a3a3, #0e7a7a);
-    box-shadow: 0 6px 16px -6px rgba(14, 138, 138, 0.7);
   }
   .side-brand .logo svg {
     width: 1.3rem;
@@ -71,6 +70,10 @@
   .side-scroll {
     @apply flex-1 overflow-auto;
     padding: 0.5rem 0.75rem;
+    scrollbar-width: none;
+  }
+  .side-scroll::-webkit-scrollbar {
+    display: none;
   }
   .sidebar.collapsed .side-scroll {
     padding: 0.5rem 0.5rem;
@@ -223,6 +226,9 @@
   .page-container {
     @apply mx-auto px-9 py-8 w-full;
     max-width: 64rem;
+  }
+  .page-container--wide {
+    max-width: 96rem;
   }
   /* New-case wizard reads as a focused form, not a full-width page. */
   .wizard {

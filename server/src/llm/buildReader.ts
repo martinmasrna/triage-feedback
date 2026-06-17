@@ -19,16 +19,18 @@ export function loadServerEnv(): void {
 }
 
 // Builds the LLM reader from environment variables:
-//   LLAMA_URL    llama.cpp server base URL, e.g. http://127.0.0.1:8080 (omit → StubReader)
-//   LLAMA_MODEL  model id stamped into provenance
-//   PROMPT_LANG  "en" (default) or "sk" — selects the prompt variant
+//   LLAMA_URL        llama.cpp server base URL, e.g. http://127.0.0.1:8080 (omit → StubReader)
+//   LLAMA_MODEL      model id stamped into provenance
+//   LLAMA_TIMEOUT_MS per-request timeout in ms (default 60 000)
+//   PROMPT_LANG      "en" (default) or "sk" — selects the prompt variant
 export function buildReader(): Reader {
   const url = process.env.LLAMA_URL;
   if (!url) {
     console.warn("[triage] LLAMA_URL not set — using StubReader (no extraction, no second opinion).");
     return new StubReader();
   }
-  const client = new LlamaCppClient({ baseUrl: url, model: process.env.LLAMA_MODEL, modelId: process.env.LLAMA_MODEL });
+  const timeoutMs = Number(process.env.LLAMA_TIMEOUT_MS) || undefined;
+  const client = new LlamaCppClient({ baseUrl: url, model: process.env.LLAMA_MODEL, modelId: process.env.LLAMA_MODEL, timeoutMs });
   const lang = process.env.PROMPT_LANG === "sk" ? "sk" : "en";
   const prompts =
     lang === "sk"

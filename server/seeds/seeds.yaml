@@ -15,11 +15,8 @@
 #   note                        rich Slovak prose (also exercises the extractor)
 #   vitals          (optional)  known vital keys → numbers (pain_score 0–10)
 #   discriminators  (optional)  known discriminator keys → present|absent|unknown
-#   expected_color  (optional)  RED|ORANGE|YELLOW|GREEN|BLUE  (coverage tag)
-#   expected_rule   (optional)  expected decisive rule name   (coverage tag)
 #
-# This file currently holds one example to prove the wiring; the full ~30-case set is authored
-# separately (see docs/TODO.md §1).
+# This file holds the curated seed library (47 cases as of June 2026).
 
 - id: infant-fever-lethargy
   intent: "Dojča 18 m · horúčka, malátnosť, znížený príjem tekutín"
@@ -30,5 +27,1252 @@
     a spí viac ako obvykle, tekutiny prijíma len málo. Bez vyrážky, bez kŕčov, dýcha bez väčšej námahy.
   vitals: { hr: 118, rr: 28, spo2: 97 }
   discriminators: {}
-  expected_color: YELLOW
-  expected_rule: fever
+
+### 30-case set of seed files, produced by an LLM
+
+# red-flag: neonatal fever (sepsis floor)
+- age: { value: 18, unit: days }
+  complaint_category: fever
+  note: >
+    18-dňový chlapček, od rána teplý a mrzutý, doma namerané 38,3 °C v podpazuší.
+    Menej papá a je akýsi spavý, plienky má vlhké, ale nie tak často ako zvyčajne.
+    Bez kašľa, bez vyrážky.
+  vitals: { hr: 172, rr: 50 }
+  discriminators:
+    avpu_unresponsive: unknown
+    apnoea: unknown
+    airway_compromise: unknown
+    active_seizure: unknown
+    central_cyanosis: unknown
+    non_blanching_rash: unknown
+    altered_consciousness: unknown
+    severe_resp_distress: unknown
+    moderate_resp_distress: unknown
+    immunocompromised: unknown
+    significant_dehydration: unknown
+    moderate_dehydration: unknown
+    on_oxygen: unknown
+    pat_appearance_abnormal: unknown
+    pat_wob_abnormal: unknown
+    pat_circulation_abnormal: unknown
+    poor_feeding: present
+    reduced_urine_output: unknown
+
+# red-flag: severe hypoxia on room air
+- age: { value: 4, unit: years }
+  complaint_category: respiratory
+  note: >
+    Chlapec s trojdňovým kašľom a dýchavičnosťou, matka hovorí, že “zmodrieva okolo
+    pier pri námahe”. Doma bez kyslíka, posledné hodiny viac zadýchaný.
+    Tekutiny prijíma, zvracanie neudáva.
+  vitals: { rr: 36, spo2: 86 }
+  discriminators:
+    avpu_unresponsive: unknown
+    apnoea: unknown
+    airway_compromise: unknown
+    active_seizure: unknown
+    central_cyanosis: unknown
+    non_blanching_rash: unknown
+    altered_consciousness: unknown
+    severe_resp_distress: present
+    moderate_resp_distress: unknown
+    immunocompromised: unknown
+    significant_dehydration: unknown
+    moderate_dehydration: unknown
+    on_oxygen: absent
+    pat_appearance_abnormal: unknown
+    pat_wob_abnormal: present
+    pat_circulation_abnormal: unknown
+    poor_feeding: unknown
+    reduced_urine_output: unknown
+
+# red-flag: shock via PAT circulation + CRT
+- age: { value: 22, unit: months }
+  complaint_category: gastrointestinal
+  note: >
+    Dvojmesačný kašeľ nemá, ale od včera pretrvávajú hnačky a zvracanie, pije málo.
+    Je bledý a studený na dotyk na rukách, mama hovorí, že je “divne spomalený”.
+    Močí menej než obvykle.
+  vitals: { crt: 3, hr: 168, rr: 32 }
+  discriminators:
+    avpu_unresponsive: unknown
+    apnoea: unknown
+    airway_compromise: unknown
+    active_seizure: unknown
+    central_cyanosis: unknown
+    non_blanching_rash: unknown
+    altered_consciousness: unknown
+    severe_resp_distress: unknown
+    moderate_resp_distress: unknown
+    immunocompromised: unknown
+    significant_dehydration: present
+    moderate_dehydration: unknown
+    on_oxygen: unknown
+    pat_appearance_abnormal: present
+    pat_wob_abnormal: unknown
+    pat_circulation_abnormal: present
+    poor_feeding: present
+    reduced_urine_output: present
+
+# red-flag: apnoea/inadequate breathing
+- age: { value: 7, unit: months }
+  complaint_category: respiratory
+  note: >
+    Dieťa priniesli rodičia, že “na chvíľu prestalo dýchať” a je bledé. Medzi epizódami
+    pôsobí ospalo, žiadne vracanie. Doma bez liekov, bez kyslíka.
+  vitals: { hr: 120 }
+  discriminators:
+    avpu_unresponsive: unknown
+    apnoea: present
+    airway_compromise: unknown
+    active_seizure: unknown
+    central_cyanosis: unknown
+    non_blanching_rash: unknown
+    altered_consciousness: present
+    severe_resp_distress: unknown
+    moderate_resp_distress: unknown
+    immunocompromised: unknown
+    significant_dehydration: unknown
+    moderate_dehydration: unknown
+    on_oxygen: absent
+    pat_appearance_abnormal: present
+    pat_wob_abnormal: unknown
+    pat_circulation_abnormal: unknown
+    poor_feeding: unknown
+    reduced_urine_output: unknown
+
+# red-flag: active seizure on arrival
+- age: { value: 9, unit: years }
+  complaint_category: neurological
+  note: >
+    Chlapec privezený sanitou, svedkovia popisujú kontinuálne trhanie končatín a
+    nereaguje na oslovenie. Predtým zdravý, teplotu nevedia.
+  vitals: { rr: 24, spo2: 95 }
+  discriminators:
+    avpu_unresponsive: unknown
+    apnoea: unknown
+    airway_compromise: unknown
+    active_seizure: present
+    central_cyanosis: unknown
+    non_blanching_rash: unknown
+    altered_consciousness: present
+    severe_resp_distress: unknown
+    moderate_resp_distress: unknown
+    immunocompromised: unknown
+    significant_dehydration: unknown
+    moderate_dehydration: unknown
+    on_oxygen: unknown
+    pat_appearance_abnormal: present
+    pat_wob_abnormal: unknown
+    pat_circulation_abnormal: unknown
+    poor_feeding: unknown
+    reduced_urine_output: unknown
+
+# red-flag: airway compromise (foreign body suspicion)
+- age: { value: 16, unit: months }
+  complaint_category: ent
+  note: >
+    Dieťa sa náhle začalo dusiť pri jedle, striedavo kašle a lapá po dychu, počuť
+    pískanie pri nádychu. Rodičia majú podozrenie na kúsok jablka.
+  vitals: { rr: 40, spo2: 93 }
+  discriminators:
+    avpu_unresponsive: unknown
+    apnoea: unknown
+    airway_compromise: present
+    active_seizure: unknown
+    central_cyanosis: unknown
+    non_blanching_rash: unknown
+    altered_consciousness: unknown
+    severe_resp_distress: present
+    moderate_resp_distress: unknown
+    immunocompromised: unknown
+    significant_dehydration: unknown
+    moderate_dehydration: unknown
+    on_oxygen: absent
+    pat_appearance_abnormal: present
+    pat_wob_abnormal: present
+    pat_circulation_abnormal: unknown
+    poor_feeding: unknown
+    reduced_urine_output: unknown
+
+# red-flag: non-blanching rash in an ill child
+- age: { value: 3, unit: years }
+  complaint_category: rash
+  note: >
+    Matka si všimla drobné fialové bodky na nohách, ktoré neblednú pri pritlačení.
+    Dieťa je malátne a teplé, od rána takmer nepije. Žiadny kašeľ, bez zvracania.
+  vitals: { rr: 28, hr: 132 }
+  discriminators:
+    avpu_unresponsive: unknown
+    apnoea: unknown
+    airway_compromise: unknown
+    active_seizure: unknown
+    central_cyanosis: unknown
+    non_blanching_rash: present
+    altered_consciousness: unknown
+    severe_resp_distress: unknown
+    moderate_resp_distress: unknown
+    immunocompromised: unknown
+    significant_dehydration: unknown
+    moderate_dehydration: unknown
+    on_oxygen: unknown
+    pat_appearance_abnormal: present
+    pat_wob_abnormal: unknown
+    pat_circulation_abnormal: unknown
+    poor_feeding: unknown
+    reduced_urine_output: unknown
+
+# red-flag: shock via PAT circulation + hypotension
+- age: { value: 11, unit: years }
+  complaint_category: other
+  note: >
+    Chlapec privezený s celkovou slabosťou a bledosťou, studené ruky, rodičia udávajú
+    zhoršujúcu sa malátnosť od rána. Bez vracania, bez bolesti.
+  vitals: { systolic_bp: 78, hr: 134, crt: 3 }
+  discriminators:
+    avpu_unresponsive: unknown
+    apnoea: unknown
+    airway_compromise: unknown
+    active_seizure: unknown
+    central_cyanosis: unknown
+    non_blanching_rash: unknown
+    altered_consciousness: unknown
+    severe_resp_distress: unknown
+    moderate_resp_distress: unknown
+    immunocompromised: unknown
+    significant_dehydration: present
+    moderate_dehydration: unknown
+    on_oxygen: unknown
+    pat_appearance_abnormal: present
+    pat_wob_abnormal: unknown
+    pat_circulation_abnormal: present
+    poor_feeding: unknown
+    reduced_urine_output: unknown
+
+# red-flag: central cyanosis
+- age: { value: 2, unit: months }
+  complaint_category: other
+  note: >
+    Dojča bledé s modrastými perami, matka hovorí, že pri kŕmení rýchlo fialovie okolo
+    úst. Teploty neudáva, bez hnačiek.
+  vitals: { rr: 38, spo2: 89 }
+  discriminators:
+    avpu_unresponsive: unknown
+    apnoea: unknown
+    airway_compromise: unknown
+    active_seizure: unknown
+    central_cyanosis: present
+    non_blanching_rash: unknown
+    altered_consciousness: unknown
+    severe_resp_distress: present
+    moderate_resp_distress: unknown
+    immunocompromised: unknown
+    significant_dehydration: unknown
+    moderate_dehydration: unknown
+    on_oxygen: absent
+    pat_appearance_abnormal: present
+    pat_wob_abnormal: present
+    pat_circulation_abnormal: present
+    poor_feeding: unknown
+    reduced_urine_output: unknown
+
+# age-banded vital: infant RR > 60/min (ORANGE)
+- age: { value: 5, unit: months }
+  complaint_category: respiratory
+  note: >
+    Od rána je viac zadýchané, pri dojčení sa často odpája a rýchlo dýcha.
+    Teplotu nezaznamenali, nezvracia.
+  vitals: { rr: 64, spo2: 95 }
+  discriminators:
+    avpu_unresponsive: unknown
+    apnoea: unknown
+    airway_compromise: unknown
+    active_seizure: unknown
+    central_cyanosis: unknown
+    non_blanching_rash: unknown
+    altered_consciousness: unknown
+    severe_resp_distress: present
+    moderate_resp_distress: unknown
+    immunocompromised: unknown
+    significant_dehydration: unknown
+    moderate_dehydration: unknown
+    on_oxygen: absent
+    pat_appearance_abnormal: unknown
+    pat_wob_abnormal: present
+    pat_circulation_abnormal: unknown
+    poor_feeding: unknown
+    reduced_urine_output: unknown
+
+# age-banded vital: severe tachycardia adolescent (panic)
+- age: { value: 16, unit: years }
+  complaint_category: psychiatric
+  note: >
+    Dievča s náhlym pocitom úzkosti, búšením srdca a trasením rúk po hádke s rodičmi.
+    Dýcha rýchlejšie, bolesti na hrudi popiera, bez liekov, bez drog.
+  vitals: { hr: 145, rr: 24, spo2: 99 }
+  discriminators:
+    avpu_unresponsive: unknown
+    apnoea: unknown
+    airway_compromise: unknown
+    active_seizure: unknown
+    central_cyanosis: unknown
+    non_blanching_rash: unknown
+    altered_consciousness: unknown
+    severe_resp_distress: unknown
+    moderate_resp_distress: present
+    immunocompromised: unknown
+    significant_dehydration: unknown
+    moderate_dehydration: unknown
+    on_oxygen: unknown
+    pat_appearance_abnormal: unknown
+    pat_wob_abnormal: present
+    pat_circulation_abnormal: unknown
+    poor_feeding: unknown
+    reduced_urine_output: unknown
+
+# age-banded vital: toddler tachycardia with fever history
+- age: { value: 20, unit: months }
+  complaint_category: fever
+  note: >
+    Od včera zvýšené teploty do 38,5 °C, dieťa plačlivé a menej je. Tekutiny pije,
+    močí. Žiadne hnačky.
+  vitals: { hr: 152, rr: 30, spo2: 98 }
+  discriminators:
+    avpu_unresponsive: unknown
+    apnoea: unknown
+    airway_compromise: unknown
+    active_seizure: unknown
+    central_cyanosis: unknown
+    non_blanching_rash: unknown
+    altered_consciousness: unknown
+    severe_resp_distress: unknown
+    moderate_resp_distress: unknown
+    immunocompromised: unknown
+    significant_dehydration: unknown
+    moderate_dehydration: unknown
+    on_oxygen: unknown
+    pat_appearance_abnormal: unknown
+    pat_wob_abnormal: unknown
+    pat_circulation_abnormal: unknown
+    poor_feeding: present
+    reduced_urine_output: unknown
+
+# age-banded vital: psychiatric hyperventilation (tachypnea)
+- age: { value: 12, unit: years }
+  complaint_category: psychiatric
+  note: >
+    Chlapec po strese v škole, dýcha plytko a rýchlo, sťažuje sa na mravčenie prstov.
+    Bez bolestí na hrudi, bez kašľa, bez teploty.
+  vitals: { rr: 28, spo2: 100, hr: 108 }
+  discriminators:
+    avpu_unresponsive: unknown
+    apnoea: unknown
+    airway_compromise: unknown
+    active_seizure: unknown
+    central_cyanosis: unknown
+    non_blanching_rash: unknown
+    altered_consciousness: unknown
+    severe_resp_distress: unknown
+    moderate_resp_distress: present
+    immunocompromised: unknown
+    significant_dehydration: unknown
+    moderate_dehydration: unknown
+    on_oxygen: unknown
+    pat_appearance_abnormal: unknown
+    pat_wob_abnormal: present
+    pat_circulation_abnormal: unknown
+    poor_feeding: unknown
+    reduced_urine_output: unknown
+
+# age-banded vital: school-age bradycardia (isolated)
+- age: { value: 8, unit: years }
+  complaint_category: other
+  note: >
+    Chlapec privezený pre únavu po tréningu, bez bolesti, bez teploty.
+    Rodičia hovoria, že športuje pravidelne.
+  vitals: { hr: 68, rr: 20, spo2: 99 }
+  discriminators:
+    avpu_unresponsive: unknown
+    apnoea: unknown
+    airway_compromise: unknown
+    active_seizure: unknown
+    central_cyanosis: unknown
+    non_blanching_rash: unknown
+    altered_consciousness: unknown
+    severe_resp_distress: unknown
+    moderate_resp_distress: unknown
+    immunocompromised: unknown
+    significant_dehydration: unknown
+    moderate_dehydration: unknown
+    on_oxygen: unknown
+    pat_appearance_abnormal: absent
+    pat_wob_abnormal: unknown
+    pat_circulation_abnormal: unknown
+    poor_feeding: unknown
+    reduced_urine_output: unknown
+
+# age-banded vital: severe tachypnea school-age (asthma flare)
+- age: { value: 10, unit: years }
+  complaint_category: respiratory
+  note: >
+    Dieťa s astmou, posledné hodiny píska a rýchlo dýcha, horúčku neudáva.
+    Inhalátor zabral len čiastočne.
+  vitals: { rr: 33, spo2: 94, hr: 122 }
+  discriminators:
+    avpu_unresponsive: unknown
+    apnoea: unknown
+    airway_compromise: unknown
+    active_seizure: unknown
+    central_cyanosis: unknown
+    non_blanching_rash: unknown
+    altered_consciousness: unknown
+    severe_resp_distress: present
+    moderate_resp_distress: unknown
+    immunocompromised: unknown
+    significant_dehydration: unknown
+    moderate_dehydration: unknown
+    on_oxygen: absent
+    pat_appearance_abnormal: unknown
+    pat_wob_abnormal: present
+    pat_circulation_abnormal: unknown
+    poor_feeding: unknown
+    reduced_urine_output: unknown
+
+# age-based rule: fever in 45‑d infant (28–90 d)
+- age: { value: 45, unit: days }
+  complaint_category: fever
+  note: >
+    Dojča s teplotou 38,2 °C od noci, je mrzuté a menej saje. Bez hnačky, bez kašľa.
+    Plienky má mokré, ale o niečo menej než zvyčajne.
+  vitals: { hr: 150, rr: 34 }
+  discriminators:
+    avpu_unresponsive: unknown
+    apnoea: unknown
+    airway_compromise: unknown
+    active_seizure: unknown
+    central_cyanosis: unknown
+    non_blanching_rash: unknown
+    altered_consciousness: unknown
+    severe_resp_distress: unknown
+    moderate_resp_distress: unknown
+    immunocompromised: unknown
+    significant_dehydration: unknown
+    moderate_dehydration: present
+    on_oxygen: unknown
+    pat_appearance_abnormal: unknown
+    pat_wob_abnormal: unknown
+    pat_circulation_abnormal: unknown
+    poor_feeding: present
+    reduced_urine_output: unknown
+
+# edge/ambiguous: school-age fever at 38.0 °C (borderline)
+- age: { value: 6, unit: years }
+  complaint_category: fever
+  note: >
+    Od rána sa sťažuje na únavu, mama namerala 38,0 °C. Pije dobre, mierny kašeľ.
+    Inak bez ťažkostí.
+  vitals: { hr: 108, rr: 22 }
+  discriminators:
+    avpu_unresponsive: unknown
+    apnoea: unknown
+    airway_compromise: unknown
+    active_seizure: unknown
+    central_cyanosis: unknown
+    non_blanching_rash: unknown
+    altered_consciousness: unknown
+    severe_resp_distress: unknown
+    moderate_resp_distress: absent
+    immunocompromised: unknown
+    significant_dehydration: unknown
+    moderate_dehydration: absent
+    on_oxygen: unknown
+    pat_appearance_abnormal: unknown
+    pat_wob_abnormal: unknown
+    pat_circulation_abnormal: unknown
+    poor_feeding: unknown
+    reduced_urine_output: unknown
+
+# edge/ambiguous: capillary refill exactly 3 s (ORANGE threshold)
+- age: { value: 3, unit: years }
+  complaint_category: gastrointestinal
+  note: >
+    Dva dni vracia a hnačkuje, je unavený a pije len po dúškoch. Močenie znížené.
+  vitals: { crt: 3, hr: 136, rr: 26 }
+  discriminators:
+    avpu_unresponsive: unknown
+    apnoea: unknown
+    airway_compromise: unknown
+    active_seizure: unknown
+    central_cyanosis: unknown
+    non_blanching_rash: unknown
+    altered_consciousness: unknown
+    severe_resp_distress: unknown
+    moderate_resp_distress: unknown
+    immunocompromised: unknown
+    significant_dehydration: present
+    moderate_dehydration: unknown
+    on_oxygen: unknown
+    pat_appearance_abnormal: present
+    pat_wob_abnormal: unknown
+    pat_circulation_abnormal: present
+    poor_feeding: unknown
+    reduced_urine_output: present
+
+# edge/ambiguous: moderate hypoxia on room air (SpO2 91 %)
+- age: { value: 14, unit: years }
+  complaint_category: respiratory
+  note: >
+    Týždeň trvá nádcha, dnes sa cíti slabý a zadýchaný pri chôdzi po schodoch.
+    Doma bez kyslíka, inak zdravý.
+  vitals: { spo2: 91, rr: 22, hr: 112 }
+  discriminators:
+    avpu_unresponsive: unknown
+    apnoea: unknown
+    airway_compromise: unknown
+    active_seizure: unknown
+    central_cyanosis: unknown
+    non_blanching_rash: unknown
+    altered_consciousness: unknown
+    severe_resp_distress: unknown
+    moderate_resp_distress: present
+    immunocompromised: unknown
+    significant_dehydration: unknown
+    moderate_dehydration: unknown
+    on_oxygen: absent
+    pat_appearance_abnormal: unknown
+    pat_wob_abnormal: present
+    pat_circulation_abnormal: unknown
+    poor_feeding: unknown
+    reduced_urine_output: unknown
+
+# edge/ambiguous: glucose 3.0 mmol/l (borderline, not <3.0)
+- age: { value: 9, unit: years }
+  complaint_category: poisoning
+  note: >
+    Babička zaznamenala potenie a tras, chlapec vynechal desiatu, sladké nepil.
+    Po príchode je bledý, ale komunikuje.
+  vitals: { glucose: 3.0, hr: 118, rr: 22 }
+  discriminators:
+    avpu_unresponsive: unknown
+    apnoea: unknown
+    airway_compromise: unknown
+    active_seizure: unknown
+    central_cyanosis: unknown
+    non_blanching_rash: unknown
+    altered_consciousness: unknown
+    severe_resp_distress: unknown
+    moderate_resp_distress: unknown
+    immunocompromised: unknown
+    significant_dehydration: unknown
+    moderate_dehydration: unknown
+    on_oxygen: unknown
+    pat_appearance_abnormal: unknown
+    pat_wob_abnormal: unknown
+    pat_circulation_abnormal: unknown
+    poor_feeding: unknown
+    reduced_urine_output: unknown
+
+# edge/ambiguous: infant RR exactly 60/min (not >60)
+- age: { value: 7, unit: months }
+  complaint_category: respiratory
+  note: >
+    Posledných pár hodín rýchlejšie dýcha, pri dojčení sa rýchlo unaví, teplota zatiaľ
+    bez merania. Matka znepokojená, že “sa mu dvíha bruško”.
+  vitals: { rr: 60, spo2: 97 }
+  discriminators:
+    avpu_unresponsive: unknown
+    apnoea: unknown
+    airway_compromise: unknown
+    active_seizure: unknown
+    central_cyanosis: unknown
+    non_blanching_rash: unknown
+    altered_consciousness: unknown
+    severe_resp_distress: unknown
+    moderate_resp_distress: present
+    immunocompromised: unknown
+    significant_dehydration: unknown
+    moderate_dehydration: unknown
+    on_oxygen: unknown
+    pat_appearance_abnormal: unknown
+    pat_wob_abnormal: present
+    pat_circulation_abnormal: unknown
+    poor_feeding: unknown
+    reduced_urine_output: unknown
+
+# known-hard: severe pain 9/10 after minor trauma, stable vitals
+- age: { value: 11, unit: years }
+  complaint_category: trauma
+  note: >
+    Spadol na ihrisku na dlaň, sťažuje sa na veľmi silnú bolesť v zápästí, pri dotyku
+    plače. Necíti brnenie prstov, bez iných ťažkostí.
+  vitals: { hr: 104, rr: 20, spo2: 100, pain_score: 9 }
+  discriminators:
+    avpu_unresponsive: unknown
+    apnoea: unknown
+    airway_compromise: unknown
+    active_seizure: unknown
+    central_cyanosis: unknown
+    non_blanching_rash: unknown
+    altered_consciousness: unknown
+    severe_resp_distress: unknown
+    moderate_resp_distress: unknown
+    immunocompromised: unknown
+    significant_dehydration: unknown
+    moderate_dehydration: unknown
+    on_oxygen: unknown
+    pat_appearance_abnormal: present
+    pat_wob_abnormal: unknown
+    pat_circulation_abnormal: unknown
+    poor_feeding: unknown
+    reduced_urine_output: unknown
+
+# known-hard: immunocompromised child with low-grade fever
+- age: { value: 4, unit: years }
+  complaint_category: fever
+  note: >
+    Dieťa po chemoterapii pre leukémiu, doma teplota 38,1 °C, inak len únava.
+    Kašeľ ani hnačku rodičia neudávajú.
+  vitals: { hr: 122, rr: 24 }
+  discriminators:
+    avpu_unresponsive: unknown
+    apnoea: unknown
+    airway_compromise: unknown
+    active_seizure: unknown
+    central_cyanosis: unknown
+    non_blanching_rash: unknown
+    altered_consciousness: unknown
+    severe_resp_distress: unknown
+    moderate_resp_distress: unknown
+    immunocompromised: present
+    significant_dehydration: unknown
+    moderate_dehydration: unknown
+    on_oxygen: unknown
+    pat_appearance_abnormal: unknown
+    pat_wob_abnormal: unknown
+    pat_circulation_abnormal: unknown
+    poor_feeding: unknown
+    reduced_urine_output: unknown
+
+# known-hard: adolescent panic with tachycardia (not severe)
+- age: { value: 15, unit: years }
+  complaint_category: psychiatric
+  note: >
+    Po konflikte so spolužiakom pociťuje úzkosť, búšenie srdca a mravčenie v perách.
+    Bez bolesti na hrudi, bez užitia návykových látok.
+  vitals: { hr: 125, rr: 22, spo2: 100 }
+  discriminators:
+    avpu_unresponsive: unknown
+    apnoea: unknown
+    airway_compromise: unknown
+    active_seizure: unknown
+    central_cyanosis: unknown
+    non_blanching_rash: unknown
+    altered_consciousness: unknown
+    severe_resp_distress: unknown
+    moderate_resp_distress: present
+    immunocompromised: unknown
+    significant_dehydration: unknown
+    moderate_dehydration: unknown
+    on_oxygen: unknown
+    pat_appearance_abnormal: unknown
+    pat_wob_abnormal: present
+    pat_circulation_abnormal: unknown
+    poor_feeding: unknown
+    reduced_urine_output: unknown
+
+# known-hard: toddler vomiting with moderate dehydration
+- age: { value: 19, unit: months }
+  complaint_category: gastrointestinal
+  note: >
+    Od včera viackrát vracal, pije málo, je mrzutý. Močenie znížené, teplotu nemá.
+  vitals: { hr: 146, rr: 30 }
+  discriminators:
+    avpu_unresponsive: unknown
+    apnoea: unknown
+    airway_compromise: unknown
+    active_seizure: unknown
+    central_cyanosis: unknown
+    non_blanching_rash: unknown
+    altered_consciousness: unknown
+    severe_resp_distress: unknown
+    moderate_resp_distress: unknown
+    immunocompromised: unknown
+    significant_dehydration: unknown
+    moderate_dehydration: present
+    on_oxygen: unknown
+    pat_appearance_abnormal: present
+    pat_wob_abnormal: unknown
+    pat_circulation_abnormal: present
+    poor_feeding: present
+    reduced_urine_output: present
+
+# well/everyday: otitis media, moderate pain 5/10
+- age: { value: 3, unit: years }
+  complaint_category: ent
+  note: >
+    Dnes večer sa sťažuje na bolesť pravého ucha, plače pri dotyku ušnice.
+    Teplotu rodičia nemerali, pije a hrá sa, keď ho to menej bolí.
+  vitals: { hr: 110, rr: 24, pain_score: 5 }
+  discriminators:
+    avpu_unresponsive: unknown
+    apnoea: unknown
+    airway_compromise: unknown
+    active_seizure: unknown
+    central_cyanosis: unknown
+    non_blanching_rash: unknown
+    altered_consciousness: unknown
+    severe_resp_distress: unknown
+    moderate_resp_distress: unknown
+    immunocompromised: unknown
+    significant_dehydration: unknown
+    moderate_dehydration: unknown
+    on_oxygen: unknown
+    pat_appearance_abnormal: absent
+    pat_wob_abnormal: unknown
+    pat_circulation_abnormal: unknown
+    poor_feeding: unknown
+    reduced_urine_output: unknown
+
+# well/everyday: viral exanthem, well child
+- age: { value: 7, unit: years }
+  complaint_category: rash
+  note: >
+    Drobné ružové škvrny na trupe od rána, nesvrbia, dieťa je čulé a pije normálne.
+    Teplotu doma nemerali, bez kašľa.
+  vitals: { hr: 96, rr: 20, spo2: 99 }
+  discriminators:
+    avpu_unresponsive: unknown
+    apnoea: unknown
+    airway_compromise: unknown
+    active_seizure: unknown
+    central_cyanosis: absent
+    non_blanching_rash: absent
+    altered_consciousness: unknown
+    severe_resp_distress: unknown
+    moderate_resp_distress: unknown
+    immunocompromised: unknown
+    significant_dehydration: unknown
+    moderate_dehydration: unknown
+    on_oxygen: unknown
+    pat_appearance_abnormal: absent
+    pat_wob_abnormal: unknown
+    pat_circulation_abnormal: absent
+    poor_feeding: unknown
+    reduced_urine_output: unknown
+
+# well/everyday: minor ankle sprain, mild pain 3/10
+- age: { value: 14, unit: years }
+  complaint_category: trauma
+  note: >
+    Pri športe podvrtla členok, kríva, ale došla po vlastných. Bolesť mierna, bez
+    otrasu hlavy, bez iných ťažkostí.
+  vitals: { hr: 90, rr: 16, spo2: 100, pain_score: 3 }
+  discriminators:
+    avpu_unresponsive: unknown
+    apnoea: unknown
+    airway_compromise: unknown
+    active_seizure: unknown
+    central_cyanosis: unknown
+    non_blanching_rash: unknown
+    altered_consciousness: unknown
+    severe_resp_distress: unknown
+    moderate_resp_distress: unknown
+    immunocompromised: unknown
+    significant_dehydration: unknown
+    moderate_dehydration: unknown
+    on_oxygen: unknown
+    pat_appearance_abnormal: absent
+    pat_wob_abnormal: unknown
+    pat_circulation_abnormal: unknown
+    poor_feeding: unknown
+    reduced_urine_output: unknown
+
+# red-flag: severe hypothermia after ethanol ingestion
+- age: { value: 13, unit: years }
+  complaint_category: poisoning
+  note: >
+    Po oslave prinesený pre ospalosť a triašku, rodičia priznávajú požitý alkohol.
+    Je bledý, chladný na dotyk, nereportuje bolesti.
+  vitals: { temp: 34.6, hr: 58, rr: 12 }
+  discriminators:
+    avpu_unresponsive: unknown
+    apnoea: unknown
+    airway_compromise: unknown
+    active_seizure: unknown
+    central_cyanosis: unknown
+    non_blanching_rash: unknown
+    altered_consciousness: present
+    severe_resp_distress: unknown
+    moderate_resp_distress: unknown
+    immunocompromised: unknown
+    significant_dehydration: unknown
+    moderate_dehydration: unknown
+    on_oxygen: unknown
+    pat_appearance_abnormal: present
+    pat_wob_abnormal: unknown
+    pat_circulation_abnormal: present
+    poor_feeding: unknown
+    reduced_urine_output: unknown
+
+# ORANGE: hypoxemia despite oxygen (SpO2 < 92 % on O2)
+- age: { value: 5, unit: years }
+  complaint_category: respiratory
+  note: >
+    Priviezli ho s kyslíkovými okuliarmi z ambulancie pre zhoršené dýchanie pri
+    zápale pľúc. Aj pri kyslíku je zadýchaný.
+  vitals: { spo2: 91, rr: 30, hr: 128 }
+  discriminators:
+    avpu_unresponsive: unknown
+    apnoea: unknown
+    airway_compromise: unknown
+    active_seizure: unknown
+    central_cyanosis: unknown
+    non_blanching_rash: unknown
+    altered_consciousness: unknown
+    severe_resp_distress: present
+    moderate_resp_distress: unknown
+    immunocompromised: unknown
+    significant_dehydration: unknown
+    moderate_dehydration: unknown
+    on_oxygen: present
+    pat_appearance_abnormal: present
+    pat_wob_abnormal: present
+    pat_circulation_abnormal: unknown
+    poor_feeding: unknown
+    reduced_urine_output: unknown
+
+# ORANGE: fever plus tachycardia (systemic load)
+- age: { value: 2, unit: years }
+  complaint_category: fever
+  note: >
+    Dnes opakovane do 39 °C, plačlivá, pýta si náruč, pije málo.
+    Zvracanie popiera, močí.
+  vitals: { temp: 39.0, hr: 160, rr: 28 }
+  discriminators:
+    avpu_unresponsive: unknown
+    apnoea: unknown
+    airway_compromise: unknown
+    active_seizure: unknown
+    central_cyanosis: unknown
+    non_blanching_rash: unknown
+    altered_consciousness: unknown
+    severe_resp_distress: unknown
+    moderate_resp_distress: unknown
+    immunocompromised: unknown
+    significant_dehydration: absent
+    moderate_dehydration: unknown
+    on_oxygen: unknown
+    pat_appearance_abnormal: present
+    pat_wob_abnormal: unknown
+    pat_circulation_abnormal: unknown
+    poor_feeding: present
+    reduced_urine_output: unknown
+
+# YELLOW: epistaxis, well child
+- age: { value: 9, unit: years }
+  complaint_category: ent
+  note: >
+    Krvácanie z nosa po škrabaní v nose, krvácanie ustúpilo po tlaku. Bez závratu,
+    bez mdlôb, pije normálne.
+  vitals: { hr: 88, rr: 18, spo2: 100 }
+  discriminators:
+    avpu_unresponsive: unknown
+    apnoea: unknown
+    airway_compromise: unknown
+    active_seizure: unknown
+    central_cyanosis: absent
+    non_blanching_rash: absent
+    altered_consciousness: unknown
+    severe_resp_distress: unknown
+    moderate_resp_distress: unknown
+    immunocompromised: unknown
+    significant_dehydration: unknown
+    moderate_dehydration: unknown
+    on_oxygen: unknown
+    pat_appearance_abnormal: absent
+    pat_wob_abnormal: unknown
+    pat_circulation_abnormal: absent
+    poor_feeding: unknown
+    reduced_urine_output: unknown
+
+# GREEN: mild detergent ingestion, asymptomatic
+- age: { value: 4, unit: years }
+  complaint_category: poisoning
+  note: >
+    Vypil malý dúšok pracieho gélu, bez vracania, bez kašľa. Je pokojný, pije vodu,
+    bez ťažkostí.
+  vitals: { hr: 96, rr: 22, spo2: 100 }
+  discriminators:
+    avpu_unresponsive: unknown
+    apnoea: unknown
+    airway_compromise: unknown
+    active_seizure: unknown
+    central_cyanosis: absent
+    non_blanching_rash: absent
+    altered_consciousness: unknown
+    severe_resp_distress: unknown
+    moderate_resp_distress: unknown
+    immunocompromised: unknown
+    significant_dehydration: absent
+    moderate_dehydration: unknown
+    on_oxygen: unknown
+    pat_appearance_abnormal: absent
+    pat_wob_abnormal: unknown
+    pat_circulation_abnormal: absent
+    poor_feeding: unknown
+    reduced_urine_output: unknown
+
+# ORANGE: hypoglycemia after suspected pill ingestion
+- age: { value: 2, unit: years }
+  complaint_category: poisoning
+  note: >
+    Našla ho babka pri otvorenej kabelke, teraz je bledý a trasie sa. Sladké vypil,
+    no stále je slabý.
+  vitals: { glucose: 2.4, hr: 140, rr: 28 }
+  discriminators:
+    avpu_unresponsive: unknown
+    apnoea: unknown
+    airway_compromise: unknown
+    active_seizure: unknown
+    central_cyanosis: unknown
+    non_blanching_rash: unknown
+    altered_consciousness: present
+    severe_resp_distress: unknown
+    moderate_resp_distress: unknown
+    immunocompromised: unknown
+    significant_dehydration: unknown
+    moderate_dehydration: unknown
+    on_oxygen: unknown
+    pat_appearance_abnormal: present
+    pat_wob_abnormal: unknown
+    pat_circulation_abnormal: unknown
+    poor_feeding: unknown
+    reduced_urine_output: unknown
+
+# GREEN: simple viral sore throat, adolescent
+- age: { value: 13, unit: years }
+  complaint_category: ent
+  note: >
+    Dva dni škriabanie v hrdle, bez teploty, pije a je. Bez dýchacích ťažkostí.
+  vitals: { hr: 84, rr: 14, spo2: 100 }
+  discriminators:
+    avpu_unresponsive: unknown
+    apnoea: unknown
+    airway_compromise: unknown
+    active_seizure: unknown
+    central_cyanosis: absent
+    non_blanching_rash: absent
+    altered_consciousness: unknown
+    severe_resp_distress: unknown
+    moderate_resp_distress: unknown
+    immunocompromised: unknown
+    significant_dehydration: absent
+    moderate_dehydration: unknown
+    on_oxygen: unknown
+    pat_appearance_abnormal: absent
+    pat_wob_abnormal: unknown
+    pat_circulation_abnormal: absent
+    poor_feeding: unknown
+    reduced_urine_output: unknown
+
+# ORANGE: ill appearance (PAT) without specific vitals
+- age: { value: 3, unit: years }
+  complaint_category: other
+  note: >
+    Rodičia hovoria, že “nevyzerá ako zvyčajne”: je apatický, visí na rukách,
+    nereaguje tak živým pohľadom. Bez vracania, pár dúškov vody vypil.
+  vitals: { hr: 118, rr: 24, spo2: 98 }
+  discriminators:
+    avpu_unresponsive: unknown
+    apnoea: unknown
+    airway_compromise: unknown
+    active_seizure: unknown
+    central_cyanosis: unknown
+    non_blanching_rash: unknown
+    altered_consciousness: present
+    severe_resp_distress: unknown
+    moderate_resp_distress: unknown
+    immunocompromised: unknown
+    significant_dehydration: unknown
+    moderate_dehydration: unknown
+    on_oxygen: unknown
+    pat_appearance_abnormal: present
+    pat_wob_abnormal: unknown
+    pat_circulation_abnormal: unknown
+    poor_feeding: present
+    reduced_urine_output: unknown
+
+# ORANGE: infant poor feeding (<6 months)
+- age: { value: 4, unit: months }
+  complaint_category: gastrointestinal
+  note: >
+    Posledné dva dni saje krátko a často sa púšťa, menej močí. Teplotu rodičia nemerali,
+    bez vracania.
+  vitals: { rr: 34 }
+  discriminators:
+    avpu_unresponsive: unknown
+    apnoea: unknown
+    airway_compromise: unknown
+    active_seizure: unknown
+    central_cyanosis: unknown
+    non_blanching_rash: unknown
+    altered_consciousness: unknown
+    severe_resp_distress: unknown
+    moderate_resp_distress: unknown
+    immunocompromised: unknown
+    significant_dehydration: unknown
+    moderate_dehydration: present
+    on_oxygen: unknown
+    pat_appearance_abnormal: present
+    pat_wob_abnormal: unknown
+    pat_circulation_abnormal: unknown
+    poor_feeding: present
+    reduced_urine_output: present
+
+# GREEN: suicidal ideation, calm and medically stable
+- age: { value: 16, unit: years }
+  complaint_category: psychiatric
+  note: >
+    Prichádza so smutnou náladou a myšlienkami na ublíženie si, bez pokusu.
+    Je pokojný, komunikuje, nechce jedlo ani nápoje.
+  vitals: { hr: 78, rr: 14, spo2: 100 }
+  discriminators:
+    avpu_unresponsive: unknown
+    apnoea: unknown
+    airway_compromise: unknown
+    active_seizure: unknown
+    central_cyanosis: absent
+    non_blanching_rash: absent
+    altered_consciousness: unknown
+    severe_resp_distress: unknown
+    moderate_resp_distress: unknown
+    immunocompromised: unknown
+    significant_dehydration: unknown
+    moderate_dehydration: unknown
+    on_oxygen: unknown
+    pat_appearance_abnormal: absent
+    pat_wob_abnormal: unknown
+    pat_circulation_abnormal: absent
+    poor_feeding: unknown
+    reduced_urine_output: unknown
+
+# GREEN: minor abdominal cramps (nonspecific), well
+- age: { value: 5, unit: years }
+  complaint_category: other
+  note: >
+    Popisuje “boľavé bruško” po obede, normálne pije aj močí. Bez hnačky, bez zvracania,
+    bez teploty.
+  vitals: { hr: 92, rr: 20, spo2: 100, pain_score: 2 }
+  discriminators:
+    avpu_unresponsive: unknown
+    apnoea: unknown
+    airway_compromise: unknown
+    active_seizure: unknown
+    central_cyanosis: absent
+    non_blanching_rash: absent
+    altered_consciousness: unknown
+    severe_resp_distress: unknown
+    moderate_resp_distress: unknown
+    immunocompromised: unknown
+    significant_dehydration: absent
+    moderate_dehydration: unknown
+    on_oxygen: unknown
+    pat_appearance_abnormal: absent
+    pat_wob_abnormal: unknown
+    pat_circulation_abnormal: absent
+    poor_feeding: unknown
+    reduced_urine_output: unknown
+
+# YELLOW: rash with fever (exanthema)
+- age: { value: 18, unit: months }
+  complaint_category: rash
+  note: >
+    Dva dni má drobnú makulopapulóznu vyrážku a teploty okolo 38,5 °C.
+    Je mrzutá, ale pije, bez zvracania.
+  vitals: { hr: 138, rr: 28 }
+  discriminators:
+    avpu_unresponsive: unknown
+    apnoea: unknown
+    airway_compromise: unknown
+    active_seizure: unknown
+    central_cyanosis: unknown
+    non_blanching_rash: absent
+    altered_consciousness: unknown
+    severe_resp_distress: unknown
+    moderate_resp_distress: unknown
+    immunocompromised: unknown
+    significant_dehydration: unknown
+    moderate_dehydration: absent
+    on_oxygen: unknown
+    pat_appearance_abnormal: unknown
+    pat_wob_abnormal: unknown
+    pat_circulation_abnormal: unknown
+    poor_feeding: unknown
+    reduced_urine_output: unknown
+
+# YELLOW: head bump in preschooler, moderate pain 5/10
+- age: { value: 4, unit: years }
+  complaint_category: trauma
+  note: >
+    Udrela si čelo o stolík, krátko plakala, bez vracania, bez mdloby.
+    Má strednú bolesť na dotyk, teraz už pokojná.
+  vitals: { hr: 112, rr: 22, pain_score: 5, spo2: 100 }
+  discriminators:
+    avpu_unresponsive: unknown
+    apnoea: unknown
+    airway_compromise: unknown
+    active_seizure: unknown
+    central_cyanosis: absent
+    non_blanching_rash: unknown
+    altered_consciousness: absent
+    severe_resp_distress: unknown
+    moderate_resp_distress: unknown
+    immunocompromised: unknown
+    significant_dehydration: unknown
+    moderate_dehydration: unknown
+    on_oxygen: unknown
+    pat_appearance_abnormal: absent
+    pat_wob_abnormal: unknown
+    pat_circulation_abnormal: absent
+    poor_feeding: unknown
+    reduced_urine_output: unknown
+
+# ORANGE: altered consciousness (AVPU V/P) without seizure
+- age: { value: 2, unit: years }
+  complaint_category: neurological
+  note: >
+    Posledné hodiny je ťažšie zobuditeľný a reaguje len spomalene na hlas. Teplotu
+    rodičia neudávajú, bez zvracania.
+  vitals: { hr: 118, rr: 24, spo2: 98 }
+  discriminators:
+    avpu_unresponsive: unknown
+    apnoea: unknown
+    airway_compromise: unknown
+    active_seizure: unknown
+    central_cyanosis: unknown
+    non_blanching_rash: unknown
+    altered_consciousness: present
+    severe_resp_distress: unknown
+    moderate_resp_distress: unknown
+    immunocompromised: unknown
+    significant_dehydration: unknown
+    moderate_dehydration: unknown
+    on_oxygen: unknown
+    pat_appearance_abnormal: present
+    pat_wob_abnormal: unknown
+    pat_circulation_abnormal: present
+    poor_feeding: unknown
+    reduced_urine_output: unknown
+
+# RED: airway swelling ruled out, keeping category ENT already covered above (this line intentionally left descriptive)
+
+# ORANGE: hyperpyrexia (≥41 °C) adolescent
+- age: { value: 13, unit: years }
+  complaint_category: fever
+  note: >
+    Od rána triaška, teplomer opakovane ukazuje 41,1 °C. Pije málo, je unavený,
+    dýcha bez námahy.
+  vitals: { hr: 130, rr: 20, temp: 41.1 }
+  discriminators:
+    avpu_unresponsive: unknown
+    apnoea: unknown
+    airway_compromise: unknown
+    active_seizure: unknown
+    central_cyanosis: unknown
+    non_blanching_rash: unknown
+    altered_consciousness: unknown
+    severe_resp_distress: unknown
+    moderate_resp_distress: unknown
+    immunocompromised: unknown
+    significant_dehydration: present
+    moderate_dehydration: unknown
+    on_oxygen: unknown
+    pat_appearance_abnormal: present
+    pat_wob_abnormal: unknown
+    pat_circulation_abnormal: unknown
+    poor_feeding: unknown
+    reduced_urine_output: unknown
+
+# ORANGE: infant reduced urine output (<6 months)
+- age: { value: 3, unit: months }
+  complaint_category: gastrointestinal
+  note: >
+    Posledných 24 hodín len dve mokré plienky, je ospalšie a menej saje. Teplotu
+    nemerali, bez hnačiek.
+  vitals: { rr: 32 }
+  discriminators:
+    avpu_unresponsive: unknown
+    apnoea: unknown
+    airway_compromise: unknown
+    active_seizure: unknown
+    central_cyanosis: unknown
+    non_blanching_rash: unknown
+    altered_consciousness: unknown
+    severe_resp_distress: unknown
+    moderate_resp_distress: unknown
+    immunocompromised: unknown
+    significant_dehydration: unknown
+    moderate_dehydration: present
+    on_oxygen: unknown
+    pat_appearance_abnormal: present
+    pat_wob_abnormal: unknown
+    pat_circulation_abnormal: present
+    poor_feeding: present
+    reduced_urine_output: present
+
+# GREEN: simple cough, room air, no distress
+- age: { value: 6, unit: years }
+  complaint_category: respiratory
+  note: >
+    Tri dni kašeľ, bez teploty, behá po čakárni. Pije a je, bez sťaženého dýchania.
+  vitals: { hr: 92, rr: 20, spo2: 99 }
+  discriminators:
+    avpu_unresponsive: unknown
+    apnoea: unknown
+    airway_compromise: unknown
+    active_seizure: unknown
+    central_cyanosis: absent
+    non_blanching_rash: absent
+    altered_consciousness: unknown
+    severe_resp_distress: absent
+    moderate_resp_distress: absent
+    immunocompromised: unknown
+    significant_dehydration: absent
+    moderate_dehydration: unknown
+    on_oxygen: absent
+    pat_appearance_abnormal: absent
+    pat_wob_abnormal: unknown
+    pat_circulation_abnormal: absent
+    poor_feeding: unknown
+    reduced_urine_output: unknown
+
+# RED: neonate case already covered; include adolescent central cyanosis handled above (descriptive marker)
+
+# RED: airway compromise already covered; concluding dataset with balanced everyday case below
+
+# GREEN: low back pain after sitting long, mild 2/10
+- age: { value: 12, unit: years }
+  complaint_category: other
+  note: >
+    Po dlhom sedení pri počítači ho bolí kríže, bolesť mierna a zlepšuje sa pri
+    chôdzi. Bez teploty, bez neurologických ťažkostí.
+  vitals: { hr: 84, rr: 16, spo2: 100, pain_score: 2 }
+  discriminators:
+    avpu_unresponsive: unknown
+    apnoea: unknown
+    airway_compromise: unknown
+    active_seizure: unknown
+    central_cyanosis: absent
+    non_blanching_rash: absent
+    altered_consciousness: unknown
+    severe_resp_distress: unknown
+    moderate_resp_distress: unknown
+    immunocompromised: unknown
+    significant_dehydration: absent
+    moderate_dehydration: unknown
+    on_oxygen: unknown
+    pat_appearance_abnormal: absent
+    pat_wob_abnormal: unknown
+    pat_circulation_abnormal: absent
+    poor_feeding: unknown
+    reduced_urine_output: unknown

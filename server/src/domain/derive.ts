@@ -1,12 +1,11 @@
-import { randomUUID } from "node:crypto";
 import { evaluate, type RuleSet } from "../engine/index.js";
 import type {
   CaseSource,
   EnteredCase,
   ExtractionResult,
   Findings,
+  NewCase,
   SecondOpinion,
-  StoredCase,
   Verdict,
 } from "./caseTypes.js";
 
@@ -45,8 +44,6 @@ export interface AssembleArgs {
   ruleSet: RuleSet;
   /** "doctor" (default) or "ai_generated" (pre-filled, pending review). */
   source?: CaseSource;
-  /** Injectable for deterministic tests. */
-  id?: string;
   now?: Date;
 }
 
@@ -55,12 +52,11 @@ export interface AssembleArgs {
  * extraction merged under the entered case), runs the engine on them, and stamps provenance. This
  * is the single place a case is composed, so `effective` and `decision` can never drift apart.
  */
-export function assembleCase(args: AssembleArgs): StoredCase {
+export function assembleCase(args: AssembleArgs): NewCase {
   const { entered, ruleSet, verdict } = args;
   const extraction = args.extraction ?? null;
   const secondOpinion = args.secondOpinion ?? null;
   const created_at = (args.now ?? new Date()).toISOString();
-  const id = args.id ?? randomUUID();
 
   const effective = args.effective ?? mergeFindings(entered, extraction);
   const decision = evaluate(
@@ -69,7 +65,6 @@ export function assembleCase(args: AssembleArgs): StoredCase {
   );
 
   return {
-    id,
     created_at,
     source: args.source ?? "doctor",
     entered,

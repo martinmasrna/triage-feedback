@@ -49,33 +49,6 @@ describe("GET /api/health and /api/form-options", () => {
   });
 });
 
-describe("GET /api/seeds", () => {
-  it("serves the configured seed cases", async () => {
-    const seeds = [
-      {
-        id: "s1",
-        intent: "Test seed",
-        age: { value: 3, unit: "years" as const },
-        complaint_category: "fever",
-        note: "Horúčka.",
-        vitals: {},
-        discriminators: {},
-      },
-    ];
-    const app = createApp({ store: new InMemoryCaseStore(), reader: new StubReader(), ruleSet, seeds });
-    const body = (await (await app.request("/api/seeds")).json()) as any[];
-    expect(body).toHaveLength(1);
-    expect(body[0].id).toBe("s1");
-    expect(body[0].intent).toBe("Test seed");
-  });
-
-  it("returns an empty list when no seeds are configured", async () => {
-    const { app } = makeApp();
-    const res = await app.request("/api/seeds");
-    expect(res.status).toBe(200);
-    expect(await res.json()).toEqual([]);
-  });
-});
 
 describe("POST /api/evaluate", () => {
   it("runs the engine and returns the decision + a draftId", async () => {
@@ -335,7 +308,7 @@ describe("POST /api/cases (save) and retrieval", () => {
 });
 
 describe("verdict_changed (silent revision tracking)", () => {
-  function patch(app: ReturnType<typeof makeApp>["app"], id: string, body: unknown) {
+  function patch(app: ReturnType<typeof makeApp>["app"], id: number, body: unknown) {
     return app.request(`/api/cases/${id}`, {
       method: "PATCH",
       headers: { "content-type": "application/json" },
@@ -375,7 +348,7 @@ describe("verdict_changed (silent revision tracking)", () => {
 describe("POST /api/cases/:id/verdict (pending AI-prefilled cases)", () => {
   it("submits the initial verdict for a pending case, then locks it", async () => {
     const { app, store } = makeApp();
-    const pending = assembleCase({
+    const pending = store.create(assembleCase({
       entered: {
         age: { value: 5, unit: "years" },
         complaint_category: "breathing",
@@ -385,9 +358,7 @@ describe("POST /api/cases/:id/verdict (pending AI-prefilled cases)", () => {
       verdict: null,
       source: "ai_generated",
       ruleSet,
-      id: "pending-1",
-    });
-    store.save(pending);
+    }));
 
     // appears in the doctor list with verdict: null and source: ai_generated
     const list = (await (await app.request("/api/cases")).json()) as any[];
@@ -395,13 +366,13 @@ describe("POST /api/cases/:id/verdict (pending AI-prefilled cases)", () => {
     expect(list[0].verdict).toBeNull();
     expect(list[0].source).toBe("ai_generated");
 
-    const res = await post(app, "/api/cases/pending-1/verdict", { agrees: true, comment: "súhlasím" });
+    const res = await post(app, `/api/cases/${pending.id}/verdict`, { agrees: true, comment: "súhlasím" });
     expect(res.status).toBe(200);
     const updated = (await res.json()) as any;
     expect(updated.verdict).toEqual({ agrees: true, comment: "súhlasím" });
 
     // submitting again is rejected — use PATCH to edit the comment instead
-    const again = await post(app, "/api/cases/pending-1/verdict", { agrees: false });
+    const again = await post(app, `/api/cases/${pending.id}/verdict`, { agrees: false });
     expect(again.status).toBe(409);
   });
 
@@ -413,22 +384,19 @@ describe("POST /api/cases/:id/verdict (pending AI-prefilled cases)", () => {
 
   it("PATCH (comment edit) on a pending case is rejected until a verdict exists", async () => {
     const { app, store } = makeApp();
-    store.save(
-      assembleCase({
-        entered: {
-          age: { value: 5, unit: "years" },
-          complaint_category: "breathing",
-          vitals: {},
-          discriminators: {},
-        },
-        verdict: null,
-        source: "ai_generated",
-        ruleSet,
-        id: "pending-2",
-      }),
-    );
+    const pending = store.create(assembleCase({
+      entered: {
+        age: { value: 5, unit: "years" },
+        complaint_category: "breathing",
+        vitals: {},
+        discriminators: {},
+      },
+      verdict: null,
+      source: "ai_generated",
+      ruleSet,
+    }));
 
-    const res = await app.request("/api/cases/pending-2", {
+    const res = await app.request(`/api/cases/${pending.id}`, {
       method: "PATCH",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ comment: "x" }),

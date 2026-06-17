@@ -17,11 +17,17 @@ export const VERDICT_LABEL = {
   disagree: "Nesúhlas",
 } as const;
 
-export const AGE_UNIT_LABEL: Record<AgeUnit, string> = {
-  days: "dní",
-  months: "mes.",
-  years: "r.",
-};
+function pluralSk(n: number, one: string, few: string, many: string): string {
+  if (n === 1) return one;
+  if (n >= 2 && n <= 4) return few;
+  return many;
+}
+
+export function formatAge(value: number, unit: AgeUnit): string {
+  if (unit === "days")   return `${value} ${pluralSk(value, "deň", "dni", "dní")}`;
+  if (unit === "months") return `${value} ${pluralSk(value, "mesiac", "mesiace", "mesiacov")}`;
+  return `${value} ${pluralSk(value, "rok", "roky", "rokov")}`;
+}
 
 export const TRISTATE_LABEL: Record<TriState, string> = {
   present: "Áno",

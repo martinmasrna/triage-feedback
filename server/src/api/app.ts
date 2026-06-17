@@ -1,4 +1,3 @@
-import { randomUUID } from "node:crypto";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { basicAuth } from "hono/basic-auth";
@@ -16,7 +15,6 @@ import {
 
 import type { EnteredCase, ExtractionResult, Findings, SecondOpinion, Verdict } from "../domain/caseTypes.js";
 import { assembleCase, mergeFindings } from "../domain/derive.js";
-import type { SeedCase } from "../domain/seeds.js";
 import type { CaseStore, ListFilter } from "../store/caseStore.js";
 import type { Reader } from "../llm/reader.js";
 import { toCSV, toJSON } from "../export/exportCases.js";
@@ -33,8 +31,6 @@ export interface ApiDeps {
   store: CaseStore;
   reader: Reader;
   ruleSet: RuleSet;
-  /** Curated mock cases served at GET /api/seeds for the entry-screen picker. Defaults to none. */
-  seeds?: SeedCase[];
 }
 
 export interface ApiOptions {
@@ -98,10 +94,6 @@ export function createApp(deps: ApiDeps, opts: ApiOptions = {}): Hono {
     }),
   );
 
-  // Curated mock cases for the entry-screen picker. Read-only; the decision is still taken live when
-  // a seed is loaded and walked through.
-  app.get("/api/seeds", (c) => c.json(deps.seeds ?? []));
-
   // Read the note into structured findings (vitals + discriminators) without deciding anything.
   // Called on the step 1 → 2 transition to pre-fill the form. Returns the full extraction so the
   // browser can send it back at /evaluate, keeping the original AI read as the stored research record.
@@ -146,7 +138,7 @@ export function createApp(deps: ApiDeps, opts: ApiOptions = {}): Hono {
     );
 
     const secondOpinion = await deps.reader.secondOpinion(input);
-    const draftId = randomUUID();
+    const draftId = crypto.randomUUID();
     drafts.set(draftId, { input, extraction, effective, secondOpinion, decision });
 
     if (drafts.size > MAX_DRAFTS) {
@@ -166,19 +158,16 @@ export function createApp(deps: ApiDeps, opts: ApiOptions = {}): Hono {
     const draft = drafts.get(draftId);
     if (!draft) return c.json({ error: "Draft not found — re-evaluate the case" }, 409);
 
-    const stored = assembleCase({
+    const newCase = assembleCase({
       entered: draft.input,
       extraction: draft.extraction,
       effective: draft.effective,
       secondOpinion: draft.secondOpinion,
-      verdict: {
-        agrees: verdict.agrees,
-        comment: verdict.comment,
-      } satisfies Verdict,
+      verdict: verdict ? { agrees: verdict.agrees, comment: verdict.comment } : null,
       ruleSet: deps.ruleSet,
     });
 
-    deps.store.save(stored);
+    const stored = deps.store.create(newCase);
     drafts.delete(draftId);
 
     return c.json(toDoctorCase(stored), 201);
@@ -190,12 +179,12 @@ export function createApp(deps: ApiDeps, opts: ApiOptions = {}): Hono {
   });
 
   app.get("/api/cases/:id", (c) => {
-    const found = deps.store.get(c.req.param("id"));
+    const found = deps.store.get(Number(c.req.param("id")));
     return found ? c.json(toDoctorCase(found)) : c.json({ error: "Not found" }, 404);
   });
 
   app.post("/api/cases/:id/verdict", async (c) => {
-    const existing = deps.store.get(c.req.param("id"));
+    const existing = deps.store.get(Number(c.req.param("id")));
     if (!existing) return c.json({ error: "Not found" }, 404);
     if (existing.verdict !== null) {
       return c.json({ error: "Case already has a verdict — edit the comment via PATCH instead" }, 409);
@@ -209,12 +198,12 @@ export function createApp(deps: ApiDeps, opts: ApiOptions = {}): Hono {
       ...existing,
       verdict: { agrees: parsed.data.agrees, comment: parsed.data.comment },
     };
-    deps.store.save(updated);
+    deps.store.update(updated);
     return c.json(toDoctorCase(updated));
   });
 
   app.patch("/api/cases/:id", async (c) => {
-    const existing = deps.store.get(c.req.param("id"));
+    const existing = deps.store.get(Number(c.req.param("id")));
     if (!existing) return c.json({ error: "Not found" }, 404);
     if (existing.verdict === null) {
       return c.json({ error: "Case has no verdict yet — submit one via POST .../verdict first" }, 409);
@@ -227,13 +216,14 @@ export function createApp(deps: ApiDeps, opts: ApiOptions = {}): Hono {
     // A revision may change the agree/disagree, the comment, or both; an omitted agrees keeps the
     // current one (e.g. a comment-only edit).
     const nextAgrees = parsed.data.agrees ?? existing.verdict.agrees;
+    const nextComment = parsed.data.comment !== undefined ? parsed.data.comment : existing.verdict.comment;
     const updated: typeof existing = {
       ...existing,
-      verdict: { agrees: nextAgrees, comment: parsed.data.comment },
+      verdict: { agrees: nextAgrees, comment: nextComment },
       // Silent, sticky: record that the decision was changed post-hoc (analysis only).
       verdict_changed: existing.verdict_changed || nextAgrees !== existing.verdict.agrees,
     };
-    deps.store.save(updated);
+    deps.store.update(updated);
     return c.json(toDoctorCase(updated));
   });
 
@@ -247,7 +237,7 @@ export function createApp(deps: ApiDeps, opts: ApiOptions = {}): Hono {
     app.get("/api/admin/cases", (c) => c.json(deps.store.list(parseListFilter(c.req.query()))));
 
     app.get("/api/admin/cases/:id", (c) => {
-      const found = deps.store.get(c.req.param("id"));
+      const found = deps.store.get(Number(c.req.param("id")));
       return found ? c.json(found) : c.json({ error: "Not found" }, 404);
     });
 

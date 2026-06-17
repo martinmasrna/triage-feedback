@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { loadRuleSet } from "../src/engine/index.js";
 import { assembleCase, mergeFindings } from "../src/domain/derive.js";
-import type { EnteredCase, ExtractionResult, StoredCase, Verdict } from "../src/domain/caseTypes.js";
+import type { EnteredCase, ExtractionResult, StoredCase } from "../src/domain/caseTypes.js";
 import { InMemoryCaseStore, selectCases } from "../src/store/caseStore.js";
 import { toCSV, toJSON } from "../src/export/exportCases.js";
 
@@ -61,7 +61,6 @@ describe("assembleCase", () => {
       secondOpinion: { color: "ORANGE", model_id: "gemma-test", prompt_version: "so-1" },
       verdict: { agrees: false, comment: "looks septic, I'd go red" },
       ruleSet: rules,
-      id: "case-1",
       now: new Date("2026-06-09T10:00:00.000Z"),
     });
 
@@ -87,7 +86,6 @@ describe("assembleCase", () => {
       verdict: null,
       source: "ai_generated",
       ruleSet: rules,
-      id: "case-pending",
     });
 
     expect(c.source).toBe("ai_generated");
@@ -111,55 +109,62 @@ describe("assembleCase", () => {
 });
 
 describe("InMemoryCaseStore + selectCases", () => {
-  function make(id: string, agrees: boolean, spo2: number, at: string): StoredCase {
-    const v: Verdict = { agrees };
+  function makeNew(agrees: boolean, spo2: number, at: string) {
     return assembleCase({
       entered: entered({ vitals: { spo2 }, discriminators: { on_oxygen: "absent" } }),
-      verdict: v,
+      verdict: { agrees },
       ruleSet: rules,
-      id,
       now: new Date(at),
     });
   }
 
-  it("saves, gets, counts, lists newest-first, and filters disagreements", () => {
+  it("creates, gets, counts, lists newest-first, and filters disagreements", () => {
     const store = new InMemoryCaseStore();
-    const agree = make("a", true, 99, "2026-06-09T09:00:00Z");
-    const disagree = make("b", false, 80, "2026-06-09T10:00:00Z");
+    const agree = store.create(makeNew(true, 99, "2026-06-09T09:00:00Z"));
+    const disagree = store.create(makeNew(false, 80, "2026-06-09T10:00:00Z"));
     expect(disagree.decision.color).toBe("RED");
 
-    store.save(agree);
-    store.save(disagree);
-
     expect(store.count()).toBe(2);
-    expect(store.get("a")?.id).toBe("a");
-    expect(store.list().map((c) => c.id)).toEqual(["b", "a"]); // newest first
-    expect(store.list({ disagreementsOnly: true }).map((c) => c.id)).toEqual(["b"]);
+    expect(store.get(agree.id)?.id).toBe(agree.id);
+    expect(store.list().map((c) => c.id)).toEqual([disagree.id, agree.id]); // newest first
+    expect(store.list({ disagreementsOnly: true }).map((c) => c.id)).toEqual([disagree.id]);
   });
 
   it("selectCases orders and filters a raw iterable", () => {
-    const a = make("a", true, 99, "2026-06-09T09:00:00Z");
-    const b = make("b", false, 80, "2026-06-09T11:00:00Z");
-    expect(selectCases([a, b]).map((c) => c.id)).toEqual(["b", "a"]);
-    expect(selectCases([a, b], { disagreementsOnly: true }).map((c) => c.id)).toEqual(["b"]);
+    const store = new InMemoryCaseStore();
+    const a = store.create(makeNew(true, 99, "2026-06-09T09:00:00Z"));
+    const b = store.create(makeNew(false, 80, "2026-06-09T11:00:00Z"));
+    expect(selectCases([a, b]).map((c) => c.id)).toEqual([b.id, a.id]);
+    expect(selectCases([a, b], { disagreementsOnly: true }).map((c) => c.id)).toEqual([b.id]);
   });
 
   it("a pending case (verdict null) is never a 'disagreement'", () => {
-    const a = make("a", false, 80, "2026-06-09T09:00:00Z"); // real disagreement
-    const pending = assembleCase({
+    const store = new InMemoryCaseStore();
+    const a = store.create(makeNew(false, 80, "2026-06-09T09:00:00Z")); // real disagreement
+    const pending = store.create(assembleCase({
       entered: entered({ vitals: { spo2: 80 }, discriminators: { on_oxygen: "absent" } }),
       verdict: null,
       source: "ai_generated",
       ruleSet: rules,
-      id: "pending",
       now: new Date("2026-06-09T11:00:00Z"),
-    });
-    expect(selectCases([a, pending], { disagreementsOnly: true }).map((c) => c.id)).toEqual(["a"]);
+    }));
+    expect(selectCases([a, pending], { disagreementsOnly: true }).map((c) => c.id)).toEqual([a.id]);
+  });
+
+  it("update preserves the id and overwrites other fields", () => {
+    const store = new InMemoryCaseStore();
+    const original = store.create(makeNew(true, 99, "2026-06-09T09:00:00Z"));
+    const modified: StoredCase = { ...original, verdict: { agrees: false } };
+    store.update(modified);
+    expect(store.count()).toBe(1);
+    expect(store.get(original.id)?.verdict?.agrees).toBe(false);
+    expect(store.get(original.id)?.id).toBe(original.id);
   });
 });
 
 describe("export", () => {
-  const c = assembleCase({
+  const store = new InMemoryCaseStore();
+  const c = store.create(assembleCase({
     entered: entered({
       note: 'Dieťa "ťažko" dýcha, vidno zaťahovanie\nmedzirebrových priestorov, teplota stúpa',
       complaint_text: "kašeľ, dýchavičnosť",
@@ -168,14 +173,13 @@ describe("export", () => {
     }),
     verdict: { agrees: false, comment: "I'd say orange, not red" },
     ruleSet: rules,
-    id: "exp-1",
     now: new Date("2026-06-09T10:00:00.000Z"),
-  });
+  }));
 
   it("toJSON round-trips losslessly", () => {
     const parsed = JSON.parse(toJSON([c]));
     expect(parsed).toHaveLength(1);
-    expect(parsed[0].id).toBe("exp-1");
+    expect(parsed[0].id).toBe(c.id);
     expect(parsed[0].decision.fired.length).toBeGreaterThan(0);
   });
 
@@ -188,7 +192,7 @@ describe("export", () => {
     const line = rest[0]!;
     // the note has a quote, comma and newline → must be wrapped in quotes with doubled quotes
     expect(line).toContain('""ťažko""');
-    expect(line).toContain("exp-1");
+    expect(line).toContain(String(c.id));
     expect(line).toContain("severe_hypoxia"); // fired rule appears in the joined column
     expect(line).toContain("false"); // doctor_agrees column
     // the embedded \n stays inside a quoted field, so splitting on the \r\n record separator

@@ -2,12 +2,12 @@
 import type { Decision } from "../types";
 import ColorChip from "./ColorChip.vue";
 
-defineProps<{ decision: Decision }>();
+defineProps<{ decision: Decision; hideHead?: boolean }>();
 </script>
 
 <template>
   <div class="explanation">
-    <div class="explanation-head">
+    <div v-if="!hideHead" class="explanation-head">
       <span>Výsledok systému:</span>
       <ColorChip :color="decision.color" />
     </div>

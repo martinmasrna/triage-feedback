@@ -24,6 +24,7 @@ export interface LlamaCppOptions {
   model?: string;
   /** Identifier recorded in provenance. Defaults to `model` or "llama.cpp". */
   modelId?: string;
+  /** Request timeout in ms. Default 60 000. */
   timeoutMs?: number;
 }
 
@@ -38,7 +39,7 @@ export class LlamaCppClient implements LlmClient {
     this.baseUrl = opts.baseUrl.replace(/\/+$/, "");
     this.model = opts.model ?? "local";
     this.modelId = opts.modelId ?? opts.model ?? "llama.cpp";
-    this.timeoutMs = opts.timeoutMs ?? 30_000;
+    this.timeoutMs = opts.timeoutMs ?? 60_000;
   }
 
   async complete(req: LlmCompletionRequest): Promise<string> {

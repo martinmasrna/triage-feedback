@@ -70,7 +70,7 @@ export const VITALS: readonly VitalDef[] = [
   { key: "diastolic_bp", label_sk: "Diastolický krvný tlak", unit: "mmHg" },
   { key: "crt", label_sk: "Kapilárny návrat", unit: "s" },
   { key: "glucose", label_sk: "Glykémia", unit: "mmol/l" },
-  { key: "pain_score", label_sk: "Skóre bolesti", unit: "0-10", min: 0, max: 10 },
+  { key: "pain_score", label_sk: "Skóre bolesti", unit: "z 10", min: 0, max: 10 },
 ];
 
 export const DISCRIMINATOR_KEYS: readonly string[] = DISCRIMINATORS.map((d) => d.key);
