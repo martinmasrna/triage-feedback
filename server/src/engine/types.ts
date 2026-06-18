@@ -40,13 +40,15 @@ export type VitalKey =
   | "glucose" // blood glucose, mmol/L
   | "pain_score"; // self/observer-reported pain, 0–10
 
+export const VITAL_VS_BAND_KEYS = ["hr", "rr", "systolic_bp", "diastolic_bp"] as const;
+
+export type VitalVsBandKey = (typeof VITAL_VS_BAND_KEYS)[number];
+
 export type TriState = "present" | "absent" | "unknown";
 
 export interface CaseInput {
   age: Age;
-  /** Typed vitals; omit a key to mean "unknown". */
   vitals?: Partial<Record<VitalKey, number>>;
-  /** Discriminator findings keyed by name; a missing key is treated as "unknown". */
   discriminators?: Record<string, TriState>;
 }
 
@@ -57,11 +59,8 @@ export interface AgeBand {
   label_sk: string;
   /** Inclusive upper bound of this band in days. Bands are checked in ascending order. */
   max_age_days: number;
-  hr_normal?: [number, number];
-  rr_normal?: [number, number];
-  diastolic_bp_normal?: [number, number];
-  /** Optional explicit minimum systolic BP; if absent the engine uses 70 + 2 × age(years). */
-  min_systolic_bp?: number;
+  vitals_normal?: Partial<Record<VitalKey, [number, number]>>;
+
 }
 
 /** A single condition. A rule fires only when ALL of its conditions hold (logical AND). */
@@ -69,11 +68,10 @@ export type Condition =
   | { kind: "vital"; vital: VitalKey; op: CompareOp; value: number }
   | {
       kind: "vital_vs_band";
-      vital: "hr" | "rr" | "diastolic_bp";
+      vital: "hr" | "rr" | "systolic_bp" | "diastolic_bp";
       bound: "above_normal" | "below_normal";
       factor?: number;
     }
-  | { kind: "bp_below_band_min" }
   | { kind: "discriminator"; discriminator: string; state: TriState }
   | { kind: "age"; op: CompareOp; value: number; unit: AgeUnit };
 
