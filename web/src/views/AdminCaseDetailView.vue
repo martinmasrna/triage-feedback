@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
 import { api } from "../api";
-import { formatAge, PENDING_LABEL, SOURCE_LABEL, TRISTATE_LABEL, VERDICT_LABEL } from "../labels";
+import { formatAge, formatDateTime, PENDING_LABEL, SOURCE_LABEL, TRISTATE_LABEL, VERDICT_LABEL } from "../labels";
 import { useVocab } from "../vocab";
 import type { StoredCase, TriState } from "../types";
 import ColorChip from "../components/ColorChip.vue";
@@ -43,7 +43,7 @@ function discEntries(d: Record<string, TriState>): [string, TriState][] {
 
   <template v-if="c">
     <h1>Detail prípadu (admin)</h1>
-    <p class="muted small">{{ c.id }} · {{ new Date(c.created_at).toLocaleString("sk-SK") }} · {{ SOURCE_LABEL[c.source] }}</p>
+    <p class="muted small">{{ c.id }} · {{ formatDateTime(c.created_at) }} · {{ SOURCE_LABEL[c.source] }}</p>
 
     <div class="card">
       <h3>Zadané údaje</h3>

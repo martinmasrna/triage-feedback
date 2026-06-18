@@ -1,10 +1,12 @@
 import { z } from "zod";
 import { VITALS } from "../engine/vocabulary.js";
+import { COLORS } from "../engine/types.js";
 
 // Zod schemas validate everything the browser sends before it reaches our logic. The browser is
 // untrusted input; these are the gate.
 
 export const TriStateSchema = z.enum(["present", "absent", "unknown"]);
+const ColorSchema = z.enum(["RED", "ORANGE", "YELLOW", "GREEN", "BLUE"]);
 
 // A partial map of known vitals → numbers. Built as an object of optional keys (NOT an
 // enum-keyed z.record, which zod v4 treats as exhaustive). Unknown keys are stripped.
@@ -55,6 +57,7 @@ export const EvaluateRequestSchema = EnteredCaseSchema.extend({
 export const VerdictSchema = z.object({
   agrees: z.boolean(),
   comment: z.string().optional(),
+  suggested_color: ColorSchema.optional(),
 });
 
 export const SaveSchema = z.object({
@@ -68,6 +71,7 @@ export const SaveSchema = z.object({
 export const VerdictPatchSchema = z.object({
   agrees: z.boolean().optional(),
   comment: z.string().optional(),
+  suggested_color: ColorSchema.optional(),
 });
 
 export type EnteredCaseInput = z.infer<typeof EnteredCaseSchema>;

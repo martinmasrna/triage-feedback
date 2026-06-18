@@ -65,6 +65,10 @@ export class SqliteCaseStore implements CaseStore {
       });
   }
 
+  delete(id: number): void {
+    this.db.prepare("DELETE FROM cases WHERE id = ?").run(id);
+  }
+
   get(id: number): StoredCase | undefined {
     const row = this.db.prepare("SELECT data FROM cases WHERE id = ?").get(id) as { data: string } | undefined;
     return row ? (JSON.parse(row.data) as StoredCase) : undefined;

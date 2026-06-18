@@ -62,6 +62,7 @@ export interface EvaluateResponse {
 export interface Verdict {
   agrees: boolean;
   comment?: string;
+  suggested_color?: Color;
 }
 
 export interface Findings {

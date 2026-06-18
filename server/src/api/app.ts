@@ -202,6 +202,14 @@ export function createApp(deps: ApiDeps, opts: ApiOptions = {}): Hono {
     return c.json(toDoctorCase(updated));
   });
 
+  app.delete("/api/cases/:id", (c) => {
+    const existing = deps.store.get(Number(c.req.param("id")));
+    if (!existing) return c.json({ error: "Not found" }, 404);
+    if (existing.source !== "doctor") return c.json({ error: "AI-generated cases cannot be deleted" }, 403);
+    deps.store.delete(existing.id);
+    return c.json({ ok: true });
+  });
+
   app.patch("/api/cases/:id", async (c) => {
     const existing = deps.store.get(Number(c.req.param("id")));
     if (!existing) return c.json({ error: "Not found" }, 404);

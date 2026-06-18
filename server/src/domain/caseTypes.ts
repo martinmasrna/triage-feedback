@@ -53,6 +53,7 @@ export interface SecondOpinion {
 export interface Verdict {
   agrees: boolean;
   comment?: string;
+  suggested_color?: Color;
 }
 
 /** How a case's input data came to exist: typed by a doctor, or pre-filled by the AI pipeline. */
