@@ -43,3 +43,8 @@ export const SOURCE_LABEL: Record<CaseSource, string> = {
 
 /** Status shown for a pending case (no doctor verdict yet). */
 export const PENDING_LABEL = "Čaká na posúdenie";
+
+export function formatDateTime(iso: string): string {
+  const d = new Date(iso);
+  return `${d.toLocaleDateString("sk-SK")} · ${d.toLocaleTimeString("sk-SK")}`;
+}

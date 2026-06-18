@@ -164,7 +164,11 @@ function relativeTime(iso: string): string {
     <!-- ── Content panel ────────────────────────────────────────────────── -->
     <div class="panel">
       <main class="page-container" :class="{ 'page-container--wide': route.name === 'cases' }">
-        <RouterView />
+        <RouterView v-slot="{ Component }">
+          <keep-alive include="CasesListView">
+            <component :is="Component" />
+          </keep-alive>
+        </RouterView>
       </main>
     </div>
   </div>

@@ -2,12 +2,14 @@
 import { ref, computed, watch } from "vue";
 import { useRouter } from "vue-router";
 import { api } from "../api";
-import { COLOR_LABEL, COLOR_ORDER, VERDICT_LABEL } from "../labels";
+import { COLOR_LABEL, COLOR_ORDER, VERDICT_LABEL, formatDateTime } from "../labels";
+import { useCaseListFilters } from "../composables/useCaseListFilters";
 import type { Color, DoctorCase, FiredRule } from "../types";
 import CaseSummaryCard from "../components/CaseSummaryCard.vue";
 import VerdictForm from "../components/VerdictForm.vue";
 
 const router = useRouter();
+const { applyFiltersAndSort } = useCaseListFilters();
 const props = defineProps<{ id: number }>();
 const c = ref<DoctorCase | null>(null);
 const error = ref("");
@@ -63,14 +65,7 @@ watch(
     try {
       const [loaded, all] = await Promise.all([api.get(id), api.list()]);
       c.value = loaded;
-      all.sort((a, b) => b.created_at.localeCompare(a.created_at));
-      if (loaded.source === "doctor") {
-        navGroup.value = all.filter((x) => x.source === "doctor");
-      } else if (loaded.verdict === null) {
-        navGroup.value = all.filter((x) => x.source === "ai_generated" && x.verdict === null);
-      } else {
-        navGroup.value = all.filter((x) => x.source === "ai_generated" && x.verdict !== null);
-      }
+      navGroup.value = applyFiltersAndSort(all);
     } catch (e) {
       error.value = (e as Error).message;
     }
@@ -134,23 +129,29 @@ async function saveEdit() {
 
     <template v-if="c">
       <div class="case-nav">
-        <button
-          class="case-nav-btn"
-          :disabled="!prevCase"
-          :title="prevCase ? `Prípad č. ${prevCase.id}` : undefined"
-          @click="prevCase && router.push(`/cases/${prevCase.id}`)"
-        >
+        <button class="case-back-btn" @click="router.push('/cases')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 6 9 12 15 18" /></svg>
+          Späť
         </button>
-        <h1>Prípad č. {{ c.id }}</h1>
-        <button
-          class="case-nav-btn"
-          :disabled="!nextCase"
-          :title="nextCase ? `Prípad č. ${nextCase.id}` : undefined"
-          @click="nextCase && router.push(`/cases/${nextCase.id}`)"
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18" /></svg>
-        </button>
+        <div class="case-nav-title">
+          <button
+            class="case-nav-btn"
+            :disabled="!prevCase"
+            :title="prevCase ? `Prípad č. ${prevCase.id}` : undefined"
+            @click="prevCase && router.push(`/cases/${prevCase.id}`)"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 6 9 12 15 18" /></svg>
+          </button>
+          <h1>Prípad č. {{ c.id }}</h1>
+          <button
+            class="case-nav-btn"
+            :disabled="!nextCase"
+            :title="nextCase ? `Prípad č. ${nextCase.id}` : undefined"
+            @click="nextCase && router.push(`/cases/${nextCase.id}`)"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18" /></svg>
+          </button>
+        </div>
       </div>
 
       <CaseSummaryCard
@@ -292,7 +293,7 @@ async function saveEdit() {
         </div>
       </div>
 
-      <p class="case-timestamp">{{ new Date(c.created_at).toLocaleString("sk-SK") }}</p>
+      <p class="case-timestamp">{{ formatDateTime(c.created_at) }}</p>
     </template>
   </div>
 </template>
