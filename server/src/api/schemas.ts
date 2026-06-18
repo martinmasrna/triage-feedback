@@ -4,7 +4,7 @@ import { VITALS } from "../engine/vocabulary.js";
 // Zod schemas validate everything the browser sends before it reaches our logic. The browser is
 // untrusted input; these are the gate.
 
-const triState = z.enum(["present", "absent", "unknown"]);
+export const TriStateSchema = z.enum(["present", "absent", "unknown"]);
 
 // A partial map of known vitals → numbers. Built as an object of optional keys (NOT an
 // enum-keyed z.record, which zod v4 treats as exhaustive). Unknown keys are stripped.
@@ -17,7 +17,7 @@ const vitalsShape = Object.fromEntries(
     return [v.key, schema.optional()];
   }),
 ) as Record<(typeof VITALS)[number]["key"], z.ZodOptional<z.ZodNumber>>;
-const VitalsSchema = z.object(vitalsShape);
+export const VitalsSchema = z.object(vitalsShape);
 
 export const AgeSchema = z.object({
   value: z.number().positive(),
@@ -31,7 +31,7 @@ export const EnteredCaseSchema = z.object({
   note: z.string().optional(),
   vitals: VitalsSchema.default({}),
   // Discriminators: any key → tri-state; the engine ignores keys it doesn't know.
-  discriminators: z.record(z.string(), triState).default({}),
+  discriminators: z.record(z.string(), TriStateSchema).default({}),
 });
 
 // The findings the reader produced from the note, as round-tripped by the browser. The note is
@@ -39,7 +39,7 @@ export const EnteredCaseSchema = z.object({
 // the original AI read is stored verbatim, distinct from whatever the doctor ended up entering.
 export const ExtractionResultSchema = z.object({
   vitals: VitalsSchema.default({}),
-  discriminators: z.record(z.string(), triState).default({}),
+  discriminators: z.record(z.string(), TriStateSchema).default({}),
   ok: z.boolean(),
   model_id: z.string(),
   prompt_version: z.string(),
