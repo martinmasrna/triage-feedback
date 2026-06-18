@@ -1,12 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
 import { MockLlmClient, type LlmCompletionRequest } from "../src/llm/client.js";
-import { LlmReader, StubReader, loadReaderPrompts, type ReaderInput } from "../src/llm/reader.js";
+import { LlmReader, StubReader, loadReaderPrompts } from "../src/llm/reader.js";
 import { buildExtractionSchema } from "../src/llm/schema.js";
 import { DISCRIMINATOR_KEYS, VITAL_KEYS } from "../src/engine/vocabulary.js";
+import { EnteredCase } from "../src/index.js";
 
 const prompts = loadReaderPrompts();
 
-const input: ReaderInput = {
+const input: EnteredCase = {
   age: { value: 2, unit: "years" },
   complaint_category: "breathing",
   complaint_text: "kašeľ",

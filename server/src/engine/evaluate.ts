@@ -12,16 +12,11 @@ import {
 
 function compare(a: number, op: CompareOp, b: number): boolean {
   switch (op) {
-    case "lt":
-      return a < b;
-    case "lte":
-      return a <= b;
-    case "gt":
-      return a > b;
-    case "gte":
-      return a >= b;
-    case "eq":
-      return a === b;
+    case "lt" : return a < b;
+    case "lte": return a <= b;
+    case "gt" : return a > b;
+    case "gte": return a >= b;
+    case "eq" : return a === b;
   }
 }
 
@@ -29,8 +24,7 @@ function compare(a: number, op: CompareOp, b: number): boolean {
  * Does a single condition hold for this case?
  *
  * Unknown data never satisfies a numeric condition: if a vital is missing, any rule needing
- * that vital simply does not fire. This is the "return unknown, never guess" principle applied
- * to the engine — the absence of a measurement cannot assert a finding.
+ * that vital simply does not fire. The absence of a measurement cannot assert a finding.
  */
 function conditionHolds(c: Condition, input: CaseInput, band: AgeBand): boolean {
   const vitals = input.vitals ?? {};
@@ -45,18 +39,11 @@ function conditionHolds(c: Condition, input: CaseInput, band: AgeBand): boolean 
     case "vital_vs_band": {
       const v = vitals[c.vital];
       if (v === undefined || v === null) return false;
-      const range =
-        c.vital === "hr" ? band.hr_normal : c.vital === "rr" ? band.rr_normal : band.diastolic_bp_normal;
+      const range = band.vitals_normal?.[c.vital];
       if (!range) return false;
       const [lower, upper] = range;
       if (c.bound === "above_normal") return v > upper * (c.factor ?? 1);
-      return v < lower; // below_normal
-    }
-    case "bp_below_band_min": {
-      const v = vitals.systolic_bp;
-      if (v === undefined || v === null) return false;
-      const min = band.min_systolic_bp ?? 70 + 2 * Math.floor(ageInUnit(input.age, "years"));
-      return v < min;
+      return v < lower;
     }
     case "discriminator": {
       const state = discriminators[c.discriminator] ?? "unknown";
@@ -88,7 +75,6 @@ export function evaluate(input: CaseInput, ruleSet: RuleSet): EvaluationResult {
 
   if (fired.length > 0) {
     const maxPriority = Math.max(...fired.map((f) => COLOR_PRIORITY[f.color]));
-    // find() returns the first match in file order → deterministic tie-break.
     decisive = fired.find((f) => COLOR_PRIORITY[f.color] === maxPriority) ?? null;
     if (decisive) color = decisive.color;
   }

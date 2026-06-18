@@ -41,6 +41,10 @@ Coverage instrument: the cases improvisation misses. Target ~30: ~9 red-flag flo
 - Rule order audit
   - Verify most dangerous RED rules appear first; confirm intended tie-breaks within each color after inserting new rules.
 
+- Age-band discretisation vs. continuous age for vital thresholds
+  - Systolic BP minimum is currently authored as a per-band constant (lower bound from the `70 + 2×age_years` formula at the band's lower age edge). HR, RR, and diastolic BP normals are also per-band. In reality all these thresholds vary continuously with age — a 5-year-old and an 11-year-old both sit in `school_age` but differ meaningfully. Confirm with clinicians whether per-band approximation is acceptable for the labelling study, or whether some vitals (systolic BP minimum in particular) warrant a continuous formula.
+
+
 ## 4. Tech debt
 - [x] **Fixed the 2 pre-existing test failures** (not feature-related): `makeApp()` in `server/test/api.test.ts` now passes `adminEnabled` for the “admin endpoints expose the full record” and “export.csv/json” suites, which previously hit the disabled-admin 404. All 89 tests green.
 - [ ] **Consider an `updated_at` / revision count** if post-hoc verdict edits need a fuller audit trail than the current single `verdict_changed` bit.

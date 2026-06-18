@@ -12,26 +12,12 @@ import {
   COLORS,
   COMPLAINT_CATEGORIES,
   DISCRIMINATOR_KEYS,
-  VITALS,
   type Color,
 } from "../engine/index.js";
+import { AgeSchema, TriStateSchema, VitalsSchema } from "../api/schemas.js";
 
 /** Path to the shipped seed library. */
 export const DEFAULT_SEEDS_PATH = fileURLToPath(new URL("../../seeds/seeds.yaml", import.meta.url));
-
-const triState = z.enum(["present", "absent", "unknown"]);
-
-// Vitals: known keys only, clamped to any declared bounds (e.g. pain_score 0–10). Unknown keys are
-// stripped — mirrors the request schema so seed vitals validate exactly like doctor-entered ones.
-const vitalsShape = Object.fromEntries(
-  VITALS.map((v) => {
-    let schema = z.number().finite();
-    if (v.min !== undefined) schema = schema.min(v.min);
-    if (v.max !== undefined) schema = schema.max(v.max);
-    return [v.key, schema.optional()];
-  }),
-);
-const VitalsSchema = z.object(vitalsShape);
 
 const categoryKeys = COMPLAINT_CATEGORIES.map((c) => c.key) as [string, ...string[]];
 
@@ -40,10 +26,7 @@ const SeedCaseSchema = z.object({
   // always has a stable id and a human label.
   id: z.string().min(1).optional(),
   intent: z.string().min(1).optional(),
-  age: z.object({
-    value: z.number().positive(),
-    unit: z.enum(["days", "months", "years"]),
-  }),
+  age: AgeSchema,
   complaint_category: z.enum(categoryKeys),
   complaint_text: z.string().optional(),
   note: z.string().min(1),
@@ -51,7 +34,7 @@ const SeedCaseSchema = z.object({
   // Tri-state findings keyed by KNOWN discriminator keys — a typo'd key would silently never fire,
   // so seeds (curated data) reject unknown keys rather than ignore them.
   discriminators: z
-    .record(z.string(), triState)
+    .record(z.string(), TriStateSchema)
     .default({})
     .superRefine((obj, ctx) => {
       for (const key of Object.keys(obj)) {

@@ -6,7 +6,7 @@ import {
   discriminatorListText,
   vitalListText,
 } from "../engine/vocabulary.js";
-import type { ExtractionResult, SecondOpinion } from "../domain/caseTypes.js";
+import type { EnteredCase, ExtractionResult, SecondOpinion } from "../domain/caseTypes.js";
 import type { LlmClient } from "./client.js";
 import { buildExtractionSchema, buildSecondOpinionSchema } from "./schema.js";
 import { loadPrompt, renderPrompt, type LoadedPrompt } from "./prompt.js";
@@ -16,21 +16,9 @@ import { loadPrompt, renderPrompt, type LoadedPrompt } from "./prompt.js";
 // ONLY AI piece; it never decides the shown color. It depends only on the LlmClient interface,
 // so it is fully testable with a mock.
 
-/** What the reader needs about a case. Mirrors the doctor's entries. */
-export interface ReaderInput {
-  age: Age;
-  complaint_category: string;
-  complaint_text?: string;
-  note?: string;
-  vitals: Partial<Record<VitalKey, number>>;
-  discriminators: Record<string, TriState>;
-}
-
 export interface Reader {
-  /** Read the note/complaint into structured findings. Never throws — on failure returns ok:false. */
-  extract(input: ReaderInput): Promise<ExtractionResult>;
-  /** The model's independent triage color, stored silently. Returns null on failure. */
-  secondOpinion(input: ReaderInput): Promise<SecondOpinion | null>;
+  extract(input: EnteredCase): Promise<ExtractionResult>;
+  secondOpinion(input: EnteredCase): Promise<SecondOpinion | null>;
 }
 
 export interface ReaderPrompts {
@@ -39,11 +27,8 @@ export interface ReaderPrompts {
 }
 
 export interface LoadReaderPromptsOptions {
-  /** Directory to load from (defaults to the shipped prompts/). */
   dir?: string;
-  /** Extraction prompt file base name. Default "extraction"; use "extraction.sk" for the Slovak A/B variant. */
   extraction?: string;
-  /** Second-opinion prompt file base name. Default "second-opinion"; use "second-opinion.sk" for Slovak. */
   secondOpinion?: string;
 }
 
@@ -63,7 +48,7 @@ export class LlmReader implements Reader {
     private readonly prompts: ReaderPrompts,
   ) {}
 
-  async extract(input: ReaderInput): Promise<ExtractionResult> {
+  async extract(input: EnteredCase): Promise<ExtractionResult> {
     const promptVersion = this.prompts.extraction.meta.version;
     try {
       const rendered = renderPrompt(this.prompts.extraction, {
@@ -86,7 +71,7 @@ export class LlmReader implements Reader {
     }
   }
 
-  async secondOpinion(input: ReaderInput): Promise<SecondOpinion | null> {
+  async secondOpinion(input: EnteredCase): Promise<SecondOpinion | null> {
     const promptVersion = this.prompts.secondOpinion.meta.version;
     try {
       const rendered = renderPrompt(this.prompts.secondOpinion, {
@@ -113,10 +98,10 @@ export class LlmReader implements Reader {
 /** Dev/test reader for running the pipeline without a model: reads nothing, gives no opinion. */
 export class StubReader implements Reader {
   constructor(private readonly promptVersion = "stub") {}
-  async extract(_input: ReaderInput): Promise<ExtractionResult> {
+  async extract(_input: EnteredCase): Promise<ExtractionResult> {
     return { vitals: {}, discriminators: {}, ok: true, model_id: "stub", prompt_version: this.promptVersion };
   }
-  async secondOpinion(_input: ReaderInput): Promise<SecondOpinion | null> {
+  async secondOpinion(_input: EnteredCase): Promise<SecondOpinion | null> {
     return null;
   }
 }
@@ -141,7 +126,7 @@ function mapExtraction(parsed: unknown, modelId: string, promptVersion: string):
 }
 
 /** A compact textual summary of the entered case, injected into the second-opinion prompt. */
-function caseSummary(input: ReaderInput): string {
+function caseSummary(input: EnteredCase): string {
   const lines: string[] = [];
   const enteredVitals = VITALS.filter((v) => input.vitals[v.key] !== undefined).map(
     (v) => `- ${v.label_sk}: ${input.vitals[v.key]} ${v.unit}`,

@@ -24,7 +24,6 @@ export {
 } from "./llm/client.js";
 export {
   type Reader,
-  type ReaderInput,
   type ReaderPrompts,
   type LoadReaderPromptsOptions,
   LlmReader,
