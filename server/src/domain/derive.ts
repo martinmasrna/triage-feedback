@@ -9,20 +9,13 @@ import type {
   Verdict,
 } from "./caseTypes.js";
 
-/**
- * Merge what the doctor entered over what the LLM extracted — the doctor always wins.
- *
- *  - Vitals: a doctor-typed value overrides any prose-extracted value; vitals the doctor
- *    left blank fall back to the extraction.
- *  - Discriminators: a doctor's explicit "present"/"absent" wins; if the doctor left it
- *    "unknown" (or never touched it), the extraction's value is used.
- */
+// Merge what the doctor entered over what the LLM extracted — the doctor always wins.
 export function mergeFindings(entered: EnteredCase, extraction: ExtractionResult | null): Findings {
   const vitals = { ...(extraction?.vitals ?? {}), ...entered.vitals };
-
   const discriminators = { ...(extraction?.discriminators ?? {}) };
+
   for (const [key, state] of Object.entries(entered.discriminators)) {
-    if (state === "present" || state === "absent") discriminators[key] = state;
+    if (state != "unknown") discriminators[key] = state;
   }
 
   return { vitals, discriminators };
@@ -39,10 +32,8 @@ export interface AssembleArgs {
    * case is the doctor's authoritative, reviewed state.
    */
   effective?: Findings;
-  /** null = no doctor verdict yet (pending review). */
   verdict: Verdict | null;
   ruleSet: RuleSet;
-  /** "doctor" (default) or "ai_generated" (pre-filled, pending review). */
   source?: CaseSource;
   now?: Date;
 }
