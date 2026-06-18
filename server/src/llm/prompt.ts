@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { parse } from "yaml";
+import { z } from "zod";
 
 // Prompts are editable Markdown files with YAML frontmatter, so they can be tuned/versioned
 // independently of code. Frontmatter = metadata (id, version, temperature). Body = the prompt,
@@ -9,12 +10,17 @@ import { parse } from "yaml";
 
 export const DEFAULT_PROMPTS_DIR = fileURLToPath(new URL("../../prompts/", import.meta.url));
 
-export interface PromptMeta {
-  id: string;
-  version: string;
-  description?: string;
-  temperature?: number;
-}
+// YAML may parse bare numbers (e.g. `version: 1`); accept string or number and coerce to string.
+const stringOrNumber = z.union([z.string(), z.number()]).transform(String);
+
+const PromptMetaSchema = z.object({
+  id: stringOrNumber,
+  version: stringOrNumber,
+  description: z.string().optional(),
+  temperature: z.number().optional(),
+});
+
+export type PromptMeta = z.infer<typeof PromptMetaSchema>;
 
 export interface LoadedPrompt {
   meta: PromptMeta;
@@ -33,17 +39,12 @@ export function parsePrompt(text: string): LoadedPrompt {
   const match = FRONTMATTER.exec(text);
   if (!match) throw new Error("Prompt is missing YAML frontmatter (--- ... --- at the top)");
 
-  const raw = parse(match[1]!) as Record<string, unknown> | null;
-  if (!raw || raw.id == null || raw.version == null) {
-    throw new Error("Prompt frontmatter must define 'id' and 'version'");
+  const raw = parse(match[1]!);
+  const metaResult = PromptMetaSchema.safeParse(raw);
+  if (!metaResult.success) {
+    throw new Error(`Prompt frontmatter is invalid: ${JSON.stringify(metaResult.error.flatten())}`);
   }
-  // Coerce id/version to strings — YAML parses e.g. `version: 1` as a number.
-  const meta: PromptMeta = {
-    id: String(raw.id),
-    version: String(raw.version),
-    description: raw.description == null ? undefined : String(raw.description),
-    temperature: typeof raw.temperature === "number" ? raw.temperature : undefined,
-  };
+  const meta = metaResult.data;
 
   const body = match[2]!;
   const system = section(body, "System");

@@ -1,7 +1,6 @@
-// The single source of truth for the findings the system understands. Both the LLM output
-// schema AND the {{discriminator_list}} / {{vital_list}} injected into the prompts are derived
-// from here, so they can never drift apart. The rule YAML must only reference keys defined here
-// (guarded by a test).
+// The single source of truth. Both the LLM output schema AND the {{discriminator_list}} / {{vital_list}}
+// injected into the prompts are derived from here, so they can never drift apart. The rule YAML must
+// only reference keys defined here (guarded by a test).
 
 import type { VitalKey } from "./types.js";
 
