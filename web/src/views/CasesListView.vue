@@ -70,6 +70,16 @@ const load = async () => {
   }
 };
 
+async function deleteCase(c: DoctorCase) {
+  if (!confirm(`Zmazať prípad č. ${c.id}? Táto akcia je nezvratná.`)) return;
+  try {
+    await api.deleteCase(c.id);
+    cases.value = cases.value.filter((x) => x.id !== c.id);
+  } catch (e) {
+    error.value = (e as Error).message;
+  }
+}
+
 onActivated(load);
 
 </script>
@@ -101,6 +111,7 @@ onActivated(load);
           <th class="sortable" @click="toggleSort('source')">Pôvod{{ sortArrow("source") }}</th>
           <th class="sortable" @click="toggleSort('color')">Systém{{ sortArrow("color") }}</th>
           <th class="sortable" @click="toggleSort('verdict')">Hodnotenie{{ sortArrow("verdict") }}</th>
+          <th></th>
         </tr>
         <tr class="filter-row">
           <th></th>
@@ -143,6 +154,7 @@ onActivated(load);
               <option value="pending">{{ PENDING_LABEL }}</option>
             </select>
           </th>
+          <th></th>
         </tr>
       </thead>
       <tbody>
@@ -154,9 +166,20 @@ onActivated(load);
           <td>{{ SOURCE_LABEL[c.source] }}</td>
           <td><ColorChip :color="c.decision.color" /></td>
           <td>{{ c.verdict ? (c.verdict.agrees ? VERDICT_LABEL.agree : VERDICT_LABEL.disagree) : PENDING_LABEL }}</td>
+          <td class="col-actions">
+            <button
+              v-if="c.source === 'doctor'"
+              type="button"
+              class="btn-delete"
+              title="Zmazať prípad"
+              @click.stop="deleteCase(c)"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+            </button>
+          </td>
         </tr>
         <tr v-if="filtered.length === 0">
-          <td colspan="7" class="muted" style="text-align:center">Žiadne prípady nezodpovedajú filtrom.</td>
+          <td colspan="8" class="muted" style="text-align:center">Žiadne prípady nezodpovedajú filtrom.</td>
         </tr>
       </tbody>
     </table>
@@ -172,6 +195,38 @@ onActivated(load);
   font-variant-numeric: tabular-nums;
   color: var(--color-muted);
   width: 3rem;
+}
+
+.col-actions {
+  width: 2.5rem;
+  text-align: center;
+}
+
+.btn-delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  border: none;
+  border-radius: 0.375rem;
+  background: transparent;
+  color: var(--color-muted);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.1s, color 0.1s, background 0.1s;
+}
+.btn-delete svg {
+  width: 1rem;
+  height: 1rem;
+}
+tr:hover .btn-delete {
+  opacity: 1;
+}
+.btn-delete:hover {
+  color: var(--color-red, #dc2626);
+  background: color-mix(in srgb, var(--color-red, #dc2626) 10%, transparent);
 }
 
 .list-header {

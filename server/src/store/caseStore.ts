@@ -15,6 +15,8 @@ export interface CaseStore {
   create(c: NewCase): StoredCase;
   /** Persist changes to an existing case by its known id. */
   update(c: StoredCase): void;
+  /** Remove a case permanently. No-op if the id does not exist. */
+  delete(id: number): void;
   get(id: number): StoredCase | undefined;
   /** Newest first. */
   list(filter?: ListFilter): StoredCase[];
@@ -48,6 +50,10 @@ export class InMemoryCaseStore implements CaseStore {
 
   update(c: StoredCase): void {
     this.cases.set(c.id, c);
+  }
+
+  delete(id: number): void {
+    this.cases.delete(id);
   }
 
   get(id: number): StoredCase | undefined {

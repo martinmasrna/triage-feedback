@@ -29,7 +29,7 @@ async function loadRecent() {
     const all = await api.list();
     all.sort((a, b) => b.created_at.localeCompare(a.created_at));
     pending.value = all.filter((c) => c.verdict === null);
-    evaluated.value = all.filter((c) => c.source === "ai_generated" && c.verdict !== null);
+    evaluated.value = all.filter((c) => c.verdict !== null);
     own.value = all.filter((c) => c.source === "doctor");
   } catch {
     // Sidebar is non-critical; stay silent and leave the lists empty.

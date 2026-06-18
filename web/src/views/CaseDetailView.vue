@@ -121,6 +121,17 @@ async function saveEdit() {
     saving.value = false;
   }
 }
+
+async function deleteCase() {
+  if (!c.value) return;
+  if (!confirm(`Zmazať prípad č. ${c.value.id}? Táto akcia je nezvratná.`)) return;
+  try {
+    await api.deleteCase(c.value.id);
+    router.push("/cases");
+  } catch (e) {
+    error.value = (e as Error).message;
+  }
+}
 </script>
 
 <template>
@@ -293,7 +304,19 @@ async function saveEdit() {
         </div>
       </div>
 
-      <p class="case-timestamp">{{ formatDateTime(c.created_at) }}</p>
+      <div class="case-footer">
+        <p class="case-timestamp">{{ formatDateTime(c.created_at) }}</p>
+        <button
+          v-if="c.source === 'doctor'"
+          type="button"
+          class="case-delete-btn"
+          title="Zmazať prípad"
+          @click="deleteCase"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          Zmazať
+        </button>
+      </div>
     </template>
   </div>
 </template>

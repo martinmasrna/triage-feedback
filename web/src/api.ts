@@ -63,6 +63,10 @@ export const api = {
       (r) => jsonOrThrow<DoctorCase>(r),
     ),
 
+  /** Permanently delete a doctor-entered case. Throws if the case is AI-generated. */
+  deleteCase: (id: number) =>
+    fetch(`/api/cases/${id}`, { method: "DELETE" }).then((r) => jsonOrThrow<{ ok: true }>(r)),
+
   // ── Admin-facing reads: the full record. ──
   adminList: (filter: ListFilter = {}) =>
     fetch(`/api/admin/cases${listQuery(filter)}`).then((r) => jsonOrThrow<StoredCase[]>(r)),
