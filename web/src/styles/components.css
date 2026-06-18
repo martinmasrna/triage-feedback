@@ -160,7 +160,7 @@
      :where() keeps this selector's specificity at just `button` (0,0,1), so any
      custom button class (0,1,0) — present or future — wins automatically without
      needing to be added to an exclusion list here. */
-  button:where(:not(.btn, .tristate-btn, .choice-btn, .age-slider-btn, .severity-btn, .case-nav-btn)),
+  button:where(:not(.btn, .tristate-btn, .choice-btn, .age-slider-btn, .severity-btn, .case-nav-btn, .rules-toggle, .color-pick-btn, .verdict-toggle-btn)),
   .button {
     @apply inline-flex items-center justify-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium no-underline transition-colors;
     cursor: pointer;
@@ -168,7 +168,7 @@
     background: var(--color-surface);
     color: var(--color-text);
   }
-  button:where(:not(.btn, .tristate-btn, .choice-btn, .age-slider-btn, .case-nav-btn)):hover,
+  button:where(:not(.btn, .tristate-btn, .choice-btn, .age-slider-btn, .case-nav-btn, .rules-toggle, .color-pick-btn, .verdict-toggle-btn)):hover,
   .button:hover {
     @apply no-underline;
     background: var(--color-surface-soft);
@@ -430,6 +430,151 @@
   .case-nav-btn:disabled {
     opacity: 0.25;
     cursor: default;
+  }
+
+  /* ── Triggered rules collapsible ────────────────────────────────────── */
+  .rules-section {
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    background: var(--color-surface-soft);
+  }
+  .rules-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    width: 100%;
+    padding: 0.45rem 1.25rem;
+    background: none;
+    border: none;
+    border-radius: 0;
+    color: var(--color-muted);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    text-align: left;
+    transition: color 0.12s, background 0.12s;
+  }
+  .rules-toggle:hover {
+    color: var(--color-text);
+    background: color-mix(in srgb, var(--color-border) 50%, transparent);
+  }
+  .rules-chevron {
+    width: 0.85rem;
+    height: 0.85rem;
+    flex-shrink: 0;
+    transition: transform 0.18s;
+  }
+  .rules-chevron.open {
+    transform: rotate(180deg);
+  }
+  .rules-list {
+    list-style: none;
+    margin: 0;
+    padding: 0 1.25rem 0.6rem;
+  }
+  .rule-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.28rem 0;
+    font-size: 0.8125rem;
+    color: var(--color-text);
+    border-bottom: 1px solid var(--color-border);
+  }
+  .rule-row:last-child {
+    border-bottom: none;
+  }
+  .rule-row.rule-decisive {
+    font-weight: 600;
+  }
+  .rule-dot {
+    display: inline-block;
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .rule-dot[data-color="RED"]    { background: var(--color-triage-red); }
+  .rule-dot[data-color="ORANGE"] { background: var(--color-triage-orange); }
+  .rule-dot[data-color="YELLOW"] { background: var(--color-triage-yellow); }
+  .rule-dot[data-color="GREEN"]  { background: var(--color-triage-green); }
+  .rule-dot[data-color="BLUE"]   { background: var(--color-triage-blue); }
+  .rule-label {
+    flex: 1;
+  }
+  .rule-badge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    background: var(--color-border);
+    padding: 0.1em 0.45em;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+
+  /* ── Suggested-color picker ──────────────────────────────────────────── */
+  .color-pick-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    margin-top: 0.4rem;
+    border-radius: 0.75rem;
+    border: 2px solid var(--color-border-strong);
+    overflow: hidden;
+  }
+  .color-pick-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.15rem;
+    padding: 0.75rem 0.25rem;
+    border: none;
+    border-right: 1px solid var(--color-border-strong);
+    border-radius: 0;
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    background: var(--color-surface);
+    transition: background 0.15s, color 0.15s;
+  }
+  .color-pick-btn:last-child {
+    border-right: none;
+  }
+  .color-pick-btn[data-color="RED"]    { color: var(--color-triage-red); }
+  .color-pick-btn[data-color="ORANGE"] { color: var(--color-triage-orange); }
+  .color-pick-btn[data-color="YELLOW"] { color: #b45309; }
+  .color-pick-btn[data-color="GREEN"]  { color: var(--color-triage-green); }
+  .color-pick-btn[data-color="BLUE"]   { color: var(--color-triage-blue); }
+  .color-pick-btn:not(:disabled):not(.selected):hover {
+    background: var(--color-surface-soft);
+  }
+
+  .color-pick-btn:not(:disabled)[data-color="RED"]:hover    { background: var(--color-triage-red);    color: #fff; }
+  .color-pick-btn:not(:disabled)[data-color="ORANGE"]:hover { background: var(--color-triage-orange); color: #fff; }
+  .color-pick-btn:not(:disabled)[data-color="YELLOW"]:hover { background: var(--color-triage-yellow); color: #1f2937; }
+  .color-pick-btn:not(:disabled)[data-color="GREEN"]:hover  { background: var(--color-triage-green);  color: #fff; }
+  .color-pick-btn:not(:disabled)[data-color="BLUE"]:hover   { background: var(--color-triage-blue);   color: #fff; }
+
+
+  .color-pick-btn[data-color="RED"].selected    { background: var(--color-triage-red);    color: #fff; }
+  .color-pick-btn[data-color="ORANGE"].selected { background: var(--color-triage-orange); color: #fff; }
+  .color-pick-btn[data-color="YELLOW"].selected { background: var(--color-triage-yellow); color: #1f2937; }
+  .color-pick-btn[data-color="GREEN"].selected  { background: var(--color-triage-green);  color: #fff; }
+  .color-pick-btn[data-color="BLUE"].selected   { background: var(--color-triage-blue);   color: #fff; }
+  .color-pick-btn:disabled {
+    background: var(--color-border-strong);
+    color: var(--color-muted);
+    cursor: not-allowed;
+  }
+  .color-pick-system-label {
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
   }
 
   .case-timestamp {

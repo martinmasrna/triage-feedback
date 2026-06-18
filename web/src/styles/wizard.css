@@ -276,41 +276,44 @@
   }
 
   /* ── Agree / disagree choice ─────────────────────────────────────────── */
-  .choice-row {
-    @apply flex gap-3 mt-2;
+  .verdict-toggle {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    margin-top: 0.5rem;
+    border-radius: 0.75rem;
+    border: 2px solid var(--color-border-strong);
+    overflow: hidden;
   }
-  .choice-btn {
-    @apply flex-1 rounded-xl font-semibold text-base;
+  .verdict-toggle-btn {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.2rem;
-    padding: 0.75rem 1rem;
-    border: 2px solid var(--color-border-strong);
+    justify-content: center;
+    gap: 0.3rem;
+    padding: 1rem 1rem;
+    font-size: 1rem;
+    font-weight: 600;
     background: var(--color-surface);
-    color: var(--color-text);
+    color: var(--color-muted);
+    border: none;
+    border-radius: 0;
     cursor: pointer;
-    transition:
-      background-color 0.12s,
-      border-color 0.12s,
-      color 0.12s,
-      box-shadow 0.12s;
+    transition: background 0.15s, color 0.15s;
   }
-  .choice-icon {
-    font-size: 1.75em;
-    line-height: 1;
+  .verdict-toggle-btn:first-child {
+    border-right: 2px solid var(--color-border-strong);
   }
-  .choice-label {
-    font-size: 0.85em;
-  }
-  .choice-btn:hover:not(.selected) {
+  .verdict-toggle-btn:hover:not(.selected) {
     background: var(--color-surface-soft);
+    color: var(--color-text);
   }
-  .choice-btn.choice-agree.selected,
-  .choice-btn.choice-disagree.selected {
-    background: #b3d9d9;
-    border-color: #9ecece;
-    color: #111827;
+  .verdict-toggle-btn.selected {
+    background: #374151;
+    color: #fff;
+  }
+  .verdict-toggle-icon {
+    font-size: 1.6rem;
+    line-height: 1;
   }
 
   /* ── Rule explanation ────────────────────────────────────────────────── */

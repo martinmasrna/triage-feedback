@@ -9,9 +9,10 @@
 //  - The explanation IS the list of fired rules + the decisive one. Nothing is generated
 //    separately. This module returns that structure; the UI renders it.
 
-export type Color = "RED" | "ORANGE" | "YELLOW" | "GREEN" | "BLUE";
 
-/** Higher number = more urgent. Used for max-color selection and tie context. */
+// ---------- Colors ----------------------------
+export type Color = "RED" | "ORANGE" | "YELLOW" | "GREEN" | "BLUE";
+export const COLORS: readonly Color[] = ["RED", "ORANGE", "YELLOW", "GREEN", "BLUE"];
 export const COLOR_PRIORITY: Record<Color, number> = {
   RED: 5,
   ORANGE: 4,
@@ -20,8 +21,7 @@ export const COLOR_PRIORITY: Record<Color, number> = {
   BLUE: 1,
 };
 
-export const COLORS: readonly Color[] = ["RED", "ORANGE", "YELLOW", "GREEN", "BLUE"];
-
+// ---------- Case input ----------------------------
 export type AgeUnit = "days" | "months" | "years";
 export interface Age {
   value: number;
@@ -57,10 +57,8 @@ export type CompareOp = "lt" | "lte" | "gt" | "gte" | "eq";
 export interface AgeBand {
   name: string;
   label_sk: string;
-  /** Inclusive upper bound of this band in days. Bands are checked in ascending order. */
   max_age_days: number;
   vitals_normal?: Partial<Record<VitalKey, [number, number]>>;
-
 }
 
 /** A single condition. A rule fires only when ALL of its conditions hold (logical AND). */
