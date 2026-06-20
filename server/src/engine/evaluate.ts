@@ -70,14 +70,12 @@ export function evaluate(input: CaseInput, ruleSet: RuleSet): EvaluationResult {
     .filter((rule) => rule.all.every((c) => conditionHolds(c, input, band)))
     .map((rule) => ({ name: rule.name, label_sk: rule.label_sk, color: rule.color }));
 
-  let color = ruleSet.default_color;
-  let decisive_rule: FiredRule | null = null;
+  const maxPriority = all_fired_rules.length > 0
+    ? Math.max(...all_fired_rules.map((f) => COLOR_PRIORITY[f.color]))
+    : -1;
 
-  if (all_fired_rules.length > 0) {
-    const maxPriority = Math.max(...all_fired_rules.map((f) => COLOR_PRIORITY[f.color]));
-    decisive_rule = all_fired_rules.find((f) => COLOR_PRIORITY[f.color] === maxPriority) ?? null;
-    if (decisive_rule) color = decisive_rule.color;
-  }
+  const decisive_rule = all_fired_rules.find((f) => COLOR_PRIORITY[f.color] === maxPriority) ?? null;
+  const color = decisive_rule?.color ?? ruleSet.default_color;
 
   return {
     color,

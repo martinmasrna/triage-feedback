@@ -65,7 +65,7 @@ describe("assembleCase", () => {
     });
 
     expect(c.decision.color).toBe("ORANGE");
-    expect(c.decision.decisive?.name).toBe("fever_young_infant");
+    expect(c.decision.decisive_rule?.name).toBe("fever_young_infant");
     expect(c.verdict?.agrees).toBe(false);
     expect(c.verdict?.comment).toBe("looks septic, I'd go red");
     expect(c.source).toBe("doctor");
@@ -103,7 +103,7 @@ describe("assembleCase", () => {
     });
     // doctor's "absent" wins → apnoea rule does NOT fire
     expect(c.effective.discriminators.apnoea).toBe("absent");
-    expect(c.decision.fired.map((f) => f.name)).not.toContain("apnoea");
+    expect(c.decision.all_fired_rules.map((f) => f.name)).not.toContain("apnoea");
     expect(c.provenance.extractor_model_id).toBe("gemma-test");
   });
 });
@@ -180,7 +180,7 @@ describe("export", () => {
     const parsed = JSON.parse(toJSON([c]));
     expect(parsed).toHaveLength(1);
     expect(parsed[0].id).toBe(c.id);
-    expect(parsed[0].decision.fired.length).toBeGreaterThan(0);
+    expect(parsed[0].decision.all_fired_rules.length).toBeGreaterThan(0);
   });
 
   it("toCSV emits a header and escapes commas, quotes, and newlines", () => {

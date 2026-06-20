@@ -39,7 +39,7 @@ describe.skipIf(!SqliteCaseStore)("SqliteCaseStore (native better-sqlite3)", () 
     expect(got?.id).toBe(c.id);
     expect(typeof got?.id).toBe("number");
     expect(got?.decision.color).toBe("RED");
-    expect(got?.decision.fired.map((f) => f.name)).toContain("severe_hypoxia");
+    expect(got?.decision.all_fired_rules.map((f) => f.name)).toContain("severe_hypoxia");
     store.close();
   });
 

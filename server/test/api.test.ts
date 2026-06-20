@@ -58,7 +58,7 @@ describe("POST /api/evaluate", () => {
     const body = (await res.json()) as any;
     expect(body.draftId).toBeTruthy();
     expect(body.decision.color).toBe("RED");
-    expect(body.decision.decisive.name).toBe("severe_hypoxia");
+    expect(body.decision.decisive_rule?.name).toBe("severe_hypoxia");
     expect(body.extraction_ok).toBe(true); // StubReader
   });
 
@@ -86,7 +86,7 @@ describe("POST /api/evaluate", () => {
     });
     const body = (await res.json()) as any;
     expect(body.decision.color).toBe("RED");
-    expect(body.decision.decisive.name).toBe("apnoea");
+    expect(body.decision.decisive_rule?.name).toBe("apnoea");
   });
 });
 
@@ -138,7 +138,7 @@ describe("POST /api/evaluate with a pre-computed extraction (pre-fill flow)", ()
       extraction: aiReadApnoea,
     });
     const body = (await res.json()) as any;
-    expect(body.decision.decisive).toBeNull();
+    expect(body.decision.decisive_rule).toBeNull();
     expect(body.decision.color).not.toBe("RED");
     expect(body.extraction_ok).toBe(true);
 
@@ -164,7 +164,7 @@ describe("POST /api/evaluate with a pre-computed extraction (pre-fill flow)", ()
     });
     const body = (await res.json()) as any;
     expect(body.decision.color).toBe("RED");
-    expect(body.decision.decisive.name).toBe("apnoea");
+    expect(body.decision.decisive_rule?.name).toBe("apnoea");
   });
 
   it("does not call the reader when the extraction is supplied", async () => {

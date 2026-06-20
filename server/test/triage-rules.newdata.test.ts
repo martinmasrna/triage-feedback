@@ -17,7 +17,7 @@ describe("oxygen-aware SpO2 rules", () => {
       discriminators: { on_oxygen: "absent" },
     });
     expect(r.color).toBe("RED");
-    expect(r.decisive?.name).toBe("severe_hypoxia");
+    expect(r.decisive_rule?.name).toBe("severe_hypoxia");
   });
 
   it("moderate hypoxia on room air is ORANGE (moderate_hypoxia)", () => {
@@ -27,7 +27,7 @@ describe("oxygen-aware SpO2 rules", () => {
       discriminators: { on_oxygen: "absent" },
     });
     expect(r.color).toBe("ORANGE");
-    expect(r.decisive?.name).toBe("moderate_hypoxia");
+    expect(r.decisive_rule?.name).toBe("moderate_hypoxia");
   });
 
   it("hypoxemia despite oxygen is ORANGE (hypoxemia_on_oxygen)", () => {
@@ -37,7 +37,7 @@ describe("oxygen-aware SpO2 rules", () => {
       discriminators: { on_oxygen: "present" },
     });
     expect(r.color).toBe("ORANGE");
-    expect(r.decisive?.name).toBe("hypoxemia_on_oxygen");
+    expect(r.decisive_rule?.name).toBe("hypoxemia_on_oxygen");
   });
 
   it("unknown on_oxygen does not satisfy 'absent': moderate_hypoxia does not fire at SpO2 92", () => {
@@ -45,7 +45,7 @@ describe("oxygen-aware SpO2 rules", () => {
       age: { value: 5, unit: "years" },
       vitals: { spo2: 92 },
     });
-    const names = r.fired.map((f) => f.name);
+    const names = r.all_fired_rules.map((f) => f.name);
     expect(names).not.toContain("moderate_hypoxia");
     expect(names).not.toContain("severe_hypoxia");
     expect(names).not.toContain("hypoxemia_on_oxygen");
@@ -60,7 +60,7 @@ describe("PAT-based rules", () => {
       discriminators: { pat_circulation_abnormal: "present" },
     });
     expect(r.color).toBe("RED");
-    expect(r.decisive?.name).toBe("shock_pat_circ_crt");
+    expect(r.decisive_rule?.name).toBe("shock_pat_circ_crt");
   });
 
   it("shock: abnormal circulation (PAT) + hypotension is RED (shock_pat_circ_hypotension)", () => {
@@ -70,7 +70,7 @@ describe("PAT-based rules", () => {
       discriminators: { pat_circulation_abnormal: "present" },
     });
     expect(r.color).toBe("RED");
-    expect(r.decisive?.name).toBe("shock_pat_circ_hypotension");
+    expect(r.decisive_rule?.name).toBe("shock_pat_circ_hypotension");
   });
 
   it("ill appearance (PAT abnormal) is ORANGE with otherwise normal findings", () => {
@@ -80,7 +80,7 @@ describe("PAT-based rules", () => {
       discriminators: { pat_appearance_abnormal: "present" },
     });
     expect(r.color).toBe("ORANGE");
-    expect(r.decisive?.name).toBe("ill_appearance");
+    expect(r.decisive_rule?.name).toBe("ill_appearance");
   });
 });
 
@@ -91,7 +91,7 @@ describe("infant hydration rules", () => {
       discriminators: { poor_feeding: "present" },
     });
     expect(r.color).toBe("ORANGE");
-    expect(r.decisive?.name).toBe("infant_poor_feeding");
+    expect(r.decisive_rule?.name).toBe("infant_poor_feeding");
   });
 
   it("infant (<6mo) with reduced urine output is ORANGE (infant_reduced_urine)", () => {
@@ -100,7 +100,7 @@ describe("infant hydration rules", () => {
       discriminators: { reduced_urine_output: "present" },
     });
     expect(r.color).toBe("ORANGE");
-    expect(r.decisive?.name).toBe("infant_reduced_urine");
+    expect(r.decisive_rule?.name).toBe("infant_reduced_urine");
   });
 });
 
@@ -111,7 +111,7 @@ describe("pain score rules", () => {
       vitals: { pain_score: 8 },
     });
     expect(r.color).toBe("ORANGE");
-    expect(r.decisive?.name).toBe("severe_pain_score");
+    expect(r.decisive_rule?.name).toBe("severe_pain_score");
   });
 
   it("moderate pain score (4-6) is YELLOW (moderate_pain_score)", () => {
@@ -120,6 +120,6 @@ describe("pain score rules", () => {
       vitals: { pain_score: 5 },
     });
     expect(r.color).toBe("YELLOW");
-    expect(r.decisive?.name).toBe("moderate_pain_score");
+    expect(r.decisive_rule?.name).toBe("moderate_pain_score");
   });
 });
