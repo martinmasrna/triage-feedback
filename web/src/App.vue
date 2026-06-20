@@ -2,11 +2,10 @@
 import { ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { Stethoscope } from "lucide-vue-next";
-import { api } from "./api";
-import { formatAge } from "./labels";
-import { useVocab } from "./vocab";
-import { requestNewCase } from "./newCaseSignal";
-import type { DoctorCase } from "./types";
+import { api } from "./services/api";
+import { formatAge } from "./assets/labels";
+import { useVocab } from "./services/vocab";
+import type { DoctorCase } from "./interfaces/types";
 
 const route = useRoute();
 const { complaintLabel } = useVocab();
@@ -85,7 +84,6 @@ function relativeTime(iso: string): string {
           to="/"
           class="nav-item"
           :title="sidebarCollapsed ? 'Nový prípad' : undefined"
-          @click="route.path === '/' && requestNewCase()"
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14" /></svg>
           <span v-if="!sidebarCollapsed">Nový prípad</span>

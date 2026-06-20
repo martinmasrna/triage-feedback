@@ -4,7 +4,10 @@ import { parse } from "yaml";
 import { z } from "zod";
 import {
   COLORS,
+  AGE_UNITS,
+  TRI_STATE_VALUES,
   VITAL_VS_BAND_KEYS,
+  COMPARE_OPS,
   type AgeBand,
   type Color,
   type Condition,
@@ -21,9 +24,9 @@ export const DEFAULT_RULES_PATH = fileURLToPath(
 // --- Primitive schemas -------------------------------------------------------
 
 const ColorSchema = z.enum(COLORS as readonly [Color, ...Color[]]);
-const CompareOpSchema = z.enum(["lt", "lte", "gt", "gte", "eq"]);
-const TriStateSchema = z.enum(["present", "absent", "unknown"]);
-const AgeUnitSchema = z.enum(["days", "months", "years"]);
+const CompareOpSchema = z.enum(COMPARE_OPS);
+const TriStateSchema = z.enum(TRI_STATE_VALUES);
+const AgeUnitSchema = z.enum(AGE_UNITS);
 const VitalVsBandKeySchema = z.enum(VITAL_VS_BAND_KEYS);
 
 // --- Condition schema --------------------------------------------------------
@@ -63,7 +66,6 @@ const AgeBandSchema = z
     name: z.string(),
     label_sk: z.string().optional(),
     max_age_days: z.number(),
-    // z.string() key avoids Zod v4 treating an enum-keyed record as exhaustive.
     vitals_normal: z.record(z.string(), z.tuple([z.number(), z.number()])).optional(),
   })
   .transform((b): AgeBand => ({

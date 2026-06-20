@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref, watch } from "vue";
 import { useRouter } from "vue-router";
-import { api } from "../api";
-import { formatAge, formatDateTime, PENDING_LABEL, SOURCE_LABEL, VERDICT_LABEL } from "../labels";
-import { useVocab } from "../vocab";
-import type { StoredCase } from "../types";
+import { api } from "../services/api";
+import { formatAge, formatDateTime, PENDING_LABEL, SOURCE_LABEL, VERDICT_LABEL } from "../assets/labels";
+import { useVocab } from "../services/vocab";
+import type { StoredCase } from "../interfaces/types";
 import ColorChip from "../components/ColorChip.vue";
 
 const router = useRouter();

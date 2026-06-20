@@ -7,7 +7,7 @@ import type {
   ListFilter,
   StoredCase,
   Verdict,
-} from "./types";
+} from "../interfaces/types";
 
 async function jsonOrThrow<T>(res: Response): Promise<T> {
   if (!res.ok) {

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { Color } from "../types";
-import { COLOR_LABEL } from "../labels";
+import type { Color } from "../interfaces/types";
+import { COLOR_LABEL } from "../assets/labels";
 
 defineProps<{ color: Color }>();
 </script>

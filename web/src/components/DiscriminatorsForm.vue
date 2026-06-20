@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import type { TriState } from "../types";
-import type { FindingRow } from "../discriminatorGroups";
-import { TRISTATE_LABEL } from "../labels";
+import type { TriState } from "../interfaces/types";
+import type { FindingRow } from "../assets/discriminatorGroups";
+import { TRISTATE_LABEL } from "../assets/labels";
 import SeverityToggle from "./SeverityToggle.vue";
 
 const props = defineProps<{ rows: FindingRow[]; modelValue: Record<string, TriState>; disabled?: boolean }>();

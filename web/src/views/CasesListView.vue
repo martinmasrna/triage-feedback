@@ -3,12 +3,12 @@ import { computed, ref, onActivated } from "vue";
 import AgeRangeSlider from "../components/AgeRangeSlider.vue";
 import DateRangePicker from "../components/DateRangePicker.vue";
 import { useRouter } from "vue-router";
-import { api } from "../api";
-import { formatAge, formatDateTime, COLOR_LABEL, COLOR_ORDER, PENDING_LABEL, SOURCE_LABEL, VERDICT_LABEL } from "../labels";
-import { useVocab } from "../vocab";
+import { api } from "../services/api.js";
+import { formatAge, formatDateTime, COLOR_LABEL, COLOR_ORDER, PENDING_LABEL, SOURCE_LABEL, VERDICT_LABEL } from "../assets/labels";
+import { useVocab } from "../services/vocab.js";
 import { useCaseListFilters } from "../composables/useCaseListFilters";
 import type { SortKey } from "../composables/useCaseListFilters";
-import type { DoctorCase } from "../types";
+import type { DoctorCase } from "../interfaces/types.js";
 import ColorChip from "../components/ColorChip.vue";
 
 defineOptions({ name: "CasesListView" });

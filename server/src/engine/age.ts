@@ -21,7 +21,6 @@ export function ageInUnit(age: Age, unit: AgeUnit): number {
   }
 }
 
-//Resolve which age band a case falls into. 
 export function resolveBand(age: Age, bands: AgeBand[]): AgeBand {
   const last = bands[bands.length - 1];
   if (!last) throw new Error("Rule set has no age bands");

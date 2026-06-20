@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onUnmounted, ref } from "vue";
-import { AGE_SLIDER_MAX, indexToAge, indexToDays } from "../ageSlider";
-import { formatAge } from "../labels";
+import { AGE_SLIDER_MAX, indexToAge, indexToDays } from "../services/ageSlider";
+import { formatAge } from "../assets/labels";
 
 const emit = defineEmits<{
   change: [{ fromDays: number | null; toDays: number | null }];

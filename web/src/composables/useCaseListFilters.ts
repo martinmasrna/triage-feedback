@@ -1,7 +1,7 @@
 import { reactive, ref, computed } from "vue";
-import { COLOR_ORDER } from "../labels";
-import { useVocab } from "../vocab";
-import type { Color, DoctorCase } from "../types";
+import { COLOR_ORDER } from "../assets/labels";
+import { useVocab } from "../services/vocab";
+import type { Color, DoctorCase } from "../interfaces/types";
 
 export type SortKey = "time" | "age" | "complaint" | "source" | "color" | "verdict";
 

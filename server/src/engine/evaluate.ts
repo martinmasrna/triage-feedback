@@ -66,25 +66,25 @@ function conditionHolds(c: Condition, input: CaseInput, band: AgeBand): boolean 
 export function evaluate(input: CaseInput, ruleSet: RuleSet): EvaluationResult {
   const band = resolveBand(input.age, ruleSet.age_bands);
 
-  const fired: FiredRule[] = ruleSet.rules
+  const all_fired_rules: FiredRule[] = ruleSet.rules
     .filter((rule) => rule.all.every((c) => conditionHolds(c, input, band)))
     .map((rule) => ({ name: rule.name, label_sk: rule.label_sk, color: rule.color }));
 
   let color = ruleSet.default_color;
-  let decisive: FiredRule | null = null;
+  let decisive_rule: FiredRule | null = null;
 
-  if (fired.length > 0) {
-    const maxPriority = Math.max(...fired.map((f) => COLOR_PRIORITY[f.color]));
-    decisive = fired.find((f) => COLOR_PRIORITY[f.color] === maxPriority) ?? null;
-    if (decisive) color = decisive.color;
+  if (all_fired_rules.length > 0) {
+    const maxPriority = Math.max(...all_fired_rules.map((f) => COLOR_PRIORITY[f.color]));
+    decisive_rule = all_fired_rules.find((f) => COLOR_PRIORITY[f.color] === maxPriority) ?? null;
+    if (decisive_rule) color = decisive_rule.color;
   }
 
   return {
     color,
     band: band.name,
     band_label_sk: band.label_sk,
-    fired,
-    decisive,
+    all_fired_rules,
+    decisive_rule,
     rule_set_version: ruleSet.version,
   };
 }

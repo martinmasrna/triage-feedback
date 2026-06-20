@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { formatAge, TRISTATE_LABEL } from "../labels";
-import { useVocab } from "../vocab";
-import type { AgeUnit, TriState } from "../types";
+import { formatAge, TRISTATE_LABEL } from "../assets/labels";
+import { useVocab } from "../services/vocab";
+import type { AgeUnit, TriState } from "../interfaces/types";
 
 const { complaintLabel, discriminatorLabel, vitalLabel, vitalUnit } = useVocab();
 

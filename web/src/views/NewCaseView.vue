@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from "vue";
 import { useRouter } from "vue-router";
-import { api } from "../api";
-import { AGE_SLIDER_MAX, ageToIndex, indexToAge } from "../ageSlider";
-import { formatAge } from "../labels";
-import { groupDiscriminators } from "../discriminatorGroups";
-import { newCaseSignal } from "../newCaseSignal";
+import { api } from "../services/api";
+import { AGE_SLIDER_MAX, ageToIndex, indexToAge } from "../services/ageSlider";
+import { formatAge } from "../assets/labels";
+import { groupDiscriminators } from "../assets/discriminatorGroups";
 import type {
   AgeUnit,
   DoctorCase,
@@ -14,8 +13,8 @@ import type {
   ExtractionResult,
   FormOptions,
   TriState,
-} from "../types";
-import { categoryIcon } from "../categoryIcons";
+} from "../interfaces/types";
+import { categoryIcon } from "../assets/categoryIcons";
 import CaseSummaryCard from "../components/CaseSummaryCard.vue";
 import ColorChip from "../components/ColorChip.vue";
 import VerdictForm from "../components/VerdictForm.vue";
@@ -96,15 +95,13 @@ watch(
 const groups = computed(() => (options.value ? groupDiscriminators(options.value.discriminators) : []));
 
 onMounted(async () => {
+  reset();
   try {
     options.value = await api.formOptions();
   } catch (e) {
     error.value = `Nepodarilo sa načítať formulár: ${(e as Error).message}`;
   }
 });
-
-// "Nový prípad" was clicked while already on this view — start over.
-watch(newCaseSignal, () => reset());
 
 function buildEntered(): EnteredCase {
   return {

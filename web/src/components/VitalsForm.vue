@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { VitalDef } from "../types";
-import { vitalIcon } from "../vitalIcons";
+import type { VitalDef } from "../interfaces/types";
+import { vitalIcon } from "../assets/vitalIcons";
 
 const props = defineProps<{ vitals: VitalDef[]; modelValue: Record<string, number>; disabled?: boolean }>();
 const emit = defineEmits<{ "update:modelValue": [Record<string, number>] }>();

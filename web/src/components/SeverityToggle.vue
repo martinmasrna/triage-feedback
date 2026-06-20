@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import type { TriState } from "../types";
-import type { SeverityOption, SeverityValue } from "../discriminatorGroups";
+import type { TriState } from "../interfaces/types";
+import type { SeverityOption, SeverityValue } from "../assets/discriminatorGroups";
 
 const props = defineProps<{
   options: SeverityOption[];

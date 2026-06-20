@@ -22,7 +22,10 @@ export const COLOR_PRIORITY: Record<Color, number> = {
 };
 
 // ---------- Case input ----------------------------
-export type AgeUnit = "days" | "months" | "years";
+
+export const AGE_UNITS = ["days", "months", "years"] as const;
+export type AgeUnit = (typeof AGE_UNITS)[number];
+
 export interface Age {
   value: number;
   unit: AgeUnit;
@@ -41,10 +44,10 @@ export type VitalKey =
   | "pain_score"; // self/observer-reported pain, 0–10
 
 export const VITAL_VS_BAND_KEYS = ["hr", "rr", "systolic_bp", "diastolic_bp"] as const;
-
 export type VitalVsBandKey = (typeof VITAL_VS_BAND_KEYS)[number];
 
-export type TriState = "present" | "absent" | "unknown";
+export const TRI_STATE_VALUES = ["present", "absent", "unknown"] as const;
+export type TriState = (typeof TRI_STATE_VALUES)[number];
 
 export interface CaseInput {
   age: Age;
@@ -52,7 +55,8 @@ export interface CaseInput {
   discriminators?: Record<string, TriState>;
 }
 
-export type CompareOp = "lt" | "lte" | "gt" | "gte" | "eq";
+export const COMPARE_OPS = ["lt", "lte", "gt", "gte", "eq"] as const;
+export type CompareOp = (typeof COMPARE_OPS)[number];
 
 export interface AgeBand {
   name: string;
@@ -61,15 +65,9 @@ export interface AgeBand {
   vitals_normal?: Partial<Record<VitalKey, [number, number]>>;
 }
 
-/** A single condition. A rule fires only when ALL of its conditions hold (logical AND). */
 export type Condition =
   | { kind: "vital"; vital: VitalKey; op: CompareOp; value: number }
-  | {
-      kind: "vital_vs_band";
-      vital: "hr" | "rr" | "systolic_bp" | "diastolic_bp";
-      bound: "above_normal" | "below_normal";
-      factor?: number;
-    }
+  | { kind: "vital_vs_band"; vital: VitalVsBandKey; bound: "above_normal" | "below_normal"; factor?: number }
   | { kind: "discriminator"; discriminator: string; state: TriState }
   | { kind: "age"; op: CompareOp; value: number; unit: AgeUnit };
 
@@ -97,9 +95,7 @@ export interface EvaluationResult {
   color: Color;
   band: string;
   band_label_sk: string;
-  /** All rules that fired, in file order. */
-  fired: FiredRule[];
-  /** The decisive (highest-color, first-in-file) rule, or null when nothing fired (default color). */
-  decisive: FiredRule | null;
+  all_fired_rules: FiredRule[];
+  decisive_rule: FiredRule | null;
   rule_set_version: string;
 }

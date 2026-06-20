@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
 import { useRouter } from "vue-router";
-import { api } from "../api";
-import { COLOR_LABEL, COLOR_ORDER, VERDICT_LABEL, formatDateTime } from "../labels";
+import { api } from "../services/api";
+import { COLOR_LABEL, COLOR_ORDER, VERDICT_LABEL, formatDateTime } from "../assets/labels";
 import { useCaseListFilters } from "../composables/useCaseListFilters";
-import type { Color, DoctorCase, FiredRule } from "../types";
+import type { Color, DoctorCase, FiredRule } from "../interfaces/types";
 import CaseSummaryCard from "../components/CaseSummaryCard.vue";
 import VerdictForm from "../components/VerdictForm.vue";
 

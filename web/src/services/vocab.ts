@@ -5,7 +5,7 @@
 import { computed } from "vue";
 import { ref } from "vue";
 import { api } from "./api";
-import type { FormOptions } from "./types";
+import type { FormOptions } from "../interfaces/types";
 
 const options = ref<FormOptions | null>(null);
 let started = false;

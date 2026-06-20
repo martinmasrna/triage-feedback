@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
-import { COLOR_LABEL, COLOR_ORDER } from "../labels";
-import type { Color, Decision } from "../types";
+import { COLOR_LABEL, COLOR_ORDER } from "../assets/labels";
+import type { Color, Decision } from "../interfaces/types";
 
 const props = defineProps<{
   decision: Decision;

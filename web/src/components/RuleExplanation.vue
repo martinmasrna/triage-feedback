@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Decision } from "../types";
+import type { Decision } from "../interfaces/types";
 import ColorChip from "./ColorChip.vue";
 
 defineProps<{ decision: Decision; hideHead?: boolean }>();

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
-import { api } from "../api";
-import { formatAge, formatDateTime, PENDING_LABEL, SOURCE_LABEL, TRISTATE_LABEL, VERDICT_LABEL } from "../labels";
-import { useVocab } from "../vocab";
-import type { StoredCase, TriState } from "../types";
+import { api } from "../services/api";
+import { formatAge, formatDateTime, PENDING_LABEL, SOURCE_LABEL, TRISTATE_LABEL, VERDICT_LABEL } from "../assets/labels";
+import { useVocab } from "../services/vocab";
+import type { StoredCase, TriState } from "../interfaces/types";
 import ColorChip from "../components/ColorChip.vue";
 import RuleExplanation from "../components/RuleExplanation.vue";
 
