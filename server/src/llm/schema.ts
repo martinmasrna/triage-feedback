@@ -1,4 +1,4 @@
-import { COLORS } from "../engine/types.js";
+import { COLORS, TRI_STATE_VALUES } from "../engine/types.js";
 import { DISCRIMINATOR_KEYS, VITALS, VITAL_KEYS } from "../engine/vocabulary.js";
 
 // JSON Schemas that constrain the model's output so it cannot return malformed data. Generated
@@ -17,7 +17,7 @@ export function buildExtractionSchema(): object {
 
   const discriminators: Record<string, object> = {};
   for (const key of DISCRIMINATOR_KEYS) {
-    discriminators[key] = { type: "string", enum: ["present", "absent", "unknown"] };
+    discriminators[key] = { type: "string", enum: TRI_STATE_VALUES };
   }
 
   return {
