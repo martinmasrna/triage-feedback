@@ -12,8 +12,7 @@ export interface DoctorCase {
   source: CaseSource;
   entered: EnteredCase;
   decision: EvaluationResult;
-  /** null = awaiting doctor review (pending). */
-  verdict: Verdict | null;
+  verdict: Verdict | null; // null = pending doctor review
   provenance: {
     rule_set_version: string;
     created_at: string;
