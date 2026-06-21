@@ -16,9 +16,13 @@ export function indexToAge(index: number): { value: number; unit: AgeUnit } {
   return { value: 3 + (index - 123), unit: "years" };
 }
 
+export function ageToDays(value: number, unit: AgeUnit): number {
+  if (unit === "months") return value * 30;
+  if (unit === "years") return value * 365;
+  return value;
+}
+
 export function indexToDays(index: number): number {
   const { value, unit } = indexToAge(index);
-  if (unit === "days")   return value;
-  if (unit === "months") return value * 30;
-  return value * 365;
+  return ageToDays(value, unit);
 }

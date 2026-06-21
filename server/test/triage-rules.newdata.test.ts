@@ -105,21 +105,21 @@ describe("infant hydration rules", () => {
 });
 
 describe("pain score rules", () => {
-  it("severe pain score (7-10) is ORANGE (severe_pain_score)", () => {
+  it("severe pain score (7-10) is ORANGE (severe_pain)", () => {
     const r = run({
       age: { value: 8, unit: "years" },
       vitals: { pain_score: 8 },
     });
     expect(r.color).toBe("ORANGE");
-    expect(r.decisive_rule?.name).toBe("severe_pain_score");
+    expect(r.decisive_rule?.name).toBe("severe_pain");
   });
 
-  it("moderate pain score (4-6) is YELLOW (moderate_pain_score)", () => {
+  it("moderate pain score (4-6) is YELLOW (moderate_pain)", () => {
     const r = run({
       age: { value: 8, unit: "years" },
       vitals: { pain_score: 5 },
     });
     expect(r.color).toBe("YELLOW");
-    expect(r.decisive_rule?.name).toBe("moderate_pain_score");
+    expect(r.decisive_rule?.name).toBe("moderate_pain");
   });
 });

@@ -6,6 +6,7 @@ import { AGE_SLIDER_MAX, ageToIndex, indexToAge } from "../services/ageSlider";
 import { formatAge } from "../assets/labels";
 import { groupDiscriminators } from "../assets/discriminatorGroups";
 import type {
+  Color,
   AgeUnit,
   DoctorCase,
   EnteredCase,
@@ -68,6 +69,7 @@ let extractedSig = "";
 const draft = ref<EvaluateResponse | null>(null);
 const evaluating = ref(false);
 const agrees = ref<boolean | null>(null);
+const suggestedColor = ref<Color | null>(null);
 const comment = ref("");
 const saving = ref(false);
 const saved = ref<DoctorCase | null>(null);
@@ -200,15 +202,13 @@ async function runEvaluate(): Promise<void> {
   }
 }
 
-const canSave = computed(() => !!draft.value && !saving.value);
-
 async function save() {
   if (!draft.value) return;
   saving.value = true;
   error.value = "";
   try {
     const verdict = agrees.value !== null
-      ? { agrees: agrees.value, comment: comment.value.trim() || undefined }
+      ? { agrees: agrees.value, comment: comment.value.trim() || undefined, suggested_color: suggestedColor.value ?? undefined }
       : null;
     saved.value = await api.save(draft.value.draftId, verdict);
   } catch (e) {
@@ -233,6 +233,7 @@ function reset() {
   draft.value = null;
   evaluating.value = false;
   agrees.value = null;
+  suggestedColor.value = null;
   comment.value = "";
   saved.value = null;
   error.value = "";
@@ -443,10 +444,10 @@ function reset() {
 
           <VerdictForm
             v-model:agrees="agrees"
+            v-model:suggestedColor="suggestedColor"
             v-model:comment="comment"
             :decision="draft.decision"
             :submitting="saving"
-            :can-submit="canSave"
             submit-label="Uložiť prípad"
             @submit="save"
           />

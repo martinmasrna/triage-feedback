@@ -1,4 +1,4 @@
-# Pediatric Triage-Feedback Tool — Specification (v1.3 — 2026-06-15)
+# Pediatric Triage-Feedback Tool — Specification (v1.4 — 2026-06-21)
 
 A small Slovak, doctor-facing web tool where pediatric clinicians run mock patient cases through an automated triage system, see what it decided and why, then record whether they agree or disagree with that decision (plus an optional comment). Each saved case is a labeled, critiqued data point used to improve the triage logic.
 
@@ -7,6 +7,7 @@ Not a clinical device. Mock data only, ever.
 The frame: the system’s output is a candidate the doctor judges. This is a labeling-and-critique instrument, not “an AI that triages with a comment box.”
 
 ### Change log
+- **v1.4 (2026-06-21)** — seed-bank delivery corrected. There is **no live seed picker and no `GET /api/seeds`** (the v1.3 plan was not kept). Seeds in `server/seeds/seeds.yaml` are loaded by the `seed-cases.ts` script, which runs each through the live extractor + engine and stores it as a pending `ai_generated` case (`verdict: null`), skipping already-seeded ids on re-run. These surface in the sidebar's "Na posúdenie" queue and are reviewed like any other case. The seed YAML shape, validation (`domain/seeds.ts`), and coverage tags (`intent`/`expected_color`/`expected_rule`) are unchanged.
 - **v1.3 (2026-06-15)** — the curated **seed bank is now wired in**: seed cases live in `server/seeds/seeds.yaml` (EnteredCase shape + optional `intent` label and `expected_color`/`expected_rule` coverage tags), are served read-only at **`GET /api/seeds`**, and a picker on entry-screen step 1 loads one into the wizard. A loaded seed pre-fills the whole form but the decision is still taken live; on *Ďalej* the extractor reads the note and **merges** its findings into the form, filling only gaps (seed/doctor values win). The same merge now also protects manual edits across back/forward navigation.
 - **v1.2 (2026-06-15)** — three behavioural changes, integrated below:
   1. The LLM reads the note **up front** and **pre-fills** the vitals and findings forms (was: read silently at the end). The doctor reviews and edits pre-filled values; the form is authoritative for the decision.
@@ -95,7 +96,7 @@ Two doctor-facing/admin boundaries:
 
 ## Step 7 — Stack & deployment
 TypeScript throughout (train/serve consistency with the future real app).
-- **Frontend**: plain Vue 3 + Vite + TS + vue-router; hand-rolled CSS; Slovak.
+- **Frontend**: plain Vue 3 + Vite + TS + vue-router; hand-rolled CSS on Tailwind (semantic classes via @apply); Slovak.
 - **Backend**: Node 22 (ESM, TS) + Hono. `createApp({ store, reader, ruleSet })` is dependency-injected and testable.
 - **Storage**: SQLite (full StoredCase as JSON + lifted columns for filtering); `InMemoryCaseStore` for dev/tests.
 - **Model**: llama.cpp HTTP server (OpenAI-compatible), schema-constrained output, behind the swappable extractor interface.

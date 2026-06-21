@@ -1,5 +1,6 @@
 import { reactive, ref, computed } from "vue";
 import { COLOR_ORDER } from "../assets/labels";
+import { ageToDays } from "../services/ageSlider";
 import { useVocab } from "../services/vocab";
 import type { Color, DoctorCase } from "../interfaces/types";
 
@@ -21,8 +22,7 @@ const sortKey = ref<SortKey>("time");
 const sortAsc = ref(false);
 
 function ageInDays(c: DoctorCase): number {
-  const { value, unit } = c.entered.age;
-  return unit === "years" ? value * 365 : unit === "months" ? value * 30 : value;
+  return ageToDays(c.entered.age.value, c.entered.age.unit);
 }
 
 function verdictRank(c: DoctorCase): number {

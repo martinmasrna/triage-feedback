@@ -163,7 +163,7 @@ export function createApp(deps: ApiDeps, opts: ApiOptions = {}): Hono {
       extraction: draft.extraction,
       effective: draft.effective,
       secondOpinion: draft.secondOpinion,
-      verdict: verdict ? { agrees: verdict.agrees, comment: verdict.comment } : null,
+      verdict: verdict,
       ruleSet: deps.ruleSet,
     });
 
@@ -196,7 +196,7 @@ export function createApp(deps: ApiDeps, opts: ApiOptions = {}): Hono {
 
     const updated: typeof existing = {
       ...existing,
-      verdict: { agrees: parsed.data.agrees, comment: parsed.data.comment },
+      verdict: parsed.data,
     };
     deps.store.update(updated);
     return c.json(toDoctorCase(updated));
@@ -225,11 +225,11 @@ export function createApp(deps: ApiDeps, opts: ApiOptions = {}): Hono {
     // current one (e.g. a comment-only edit).
     const nextAgrees = parsed.data.agrees ?? existing.verdict.agrees;
     const nextComment = parsed.data.comment !== undefined ? parsed.data.comment : existing.verdict.comment;
+    const nextColor = nextAgrees ? undefined : (parsed.data.suggested_color ?? existing.verdict.suggested_color);
     const updated: typeof existing = {
       ...existing,
-      verdict: { agrees: nextAgrees, comment: nextComment },
-      // Silent, sticky: record that the decision was changed post-hoc (analysis only).
-      verdict_changed: existing.verdict_changed || nextAgrees !== existing.verdict.agrees,
+      verdict: { agrees: nextAgrees, comment: nextComment, suggested_color: nextColor },
+      verdict_changed: existing.verdict_changed || nextAgrees !== existing.verdict.agrees, // silent, analysis-only
     };
     deps.store.update(updated);
     return c.json(toDoctorCase(updated));

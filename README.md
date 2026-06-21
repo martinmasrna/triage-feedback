@@ -68,7 +68,7 @@ point elsewhere ad-hoc: `$env:LLAMA_URL="http://other:8009"; npm start`.
 ## Tests
 
 ```
-cd server && npm test      # 61 tests: engine, domain, store, export, LLM reader, API
+cd server && npm test      # 99 tests: engine, domain, store, export, LLM reader, API
 cd server && npm run typecheck
 cd web && npm run typecheck
 ```
