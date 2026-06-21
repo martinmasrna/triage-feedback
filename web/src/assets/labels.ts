@@ -1,4 +1,4 @@
-import type { AgeUnit, CaseSource, Color, TriState } from "./types";
+import type { AgeUnit, CaseSource, Color, TriState } from "../interfaces/types";
 
 // Colors ordered most → least urgent.
 export const COLOR_ORDER: Color[] = ["RED", "ORANGE", "YELLOW", "GREEN", "BLUE"];

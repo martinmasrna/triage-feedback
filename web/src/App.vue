@@ -3,19 +3,14 @@ import { ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { Stethoscope } from "lucide-vue-next";
 import { api } from "./services/api";
-import { formatAge } from "./assets/labels";
-import { useVocab } from "./services/vocab";
+import SideGroup from "./components/SideGroup.vue";
 import type { DoctorCase } from "./interfaces/types";
 
 const route = useRoute();
-const { complaintLabel } = useVocab();
 
 const pending = ref<DoctorCase[]>([]);
 const evaluated = ref<DoctorCase[]>([]);
 const own = ref<DoctorCase[]>([]);
-const pendingExpanded = ref(true);
-const evaluatedExpanded = ref(false);
-const ownExpanded = ref(true);
 const sidebarCollapsed = ref(localStorage.getItem("sidebarCollapsed") === "1");
 
 function toggleSidebar() {
@@ -37,25 +32,6 @@ async function loadRecent() {
 
 // Refresh whenever navigation lands somewhere (covers "saved a new case" → list/detail).
 watch(() => route.fullPath, loadRecent, { immediate: true });
-
-
-function caseTitle(c: DoctorCase): string {
-  return `${formatAge(c.entered.age.value, c.entered.age.unit)} · ${complaintLabel(c.entered.complaint_category)}`;
-}
-
-function relativeTime(iso: string): string {
-  const then = new Date(iso);
-  const now = new Date();
-  const diffMin = Math.round((now.getTime() - then.getTime()) / 60000);
-  if (diffMin < 1) return "teraz";
-  if (diffMin < 60) return `pred ${diffMin} min`;
-  const sameDay = then.toDateString() === now.toDateString();
-  if (sameDay) return `dnes ${then.toLocaleTimeString("sk-SK", { hour: "2-digit", minute: "2-digit" })}`;
-  const yesterday = new Date(now);
-  yesterday.setDate(now.getDate() - 1);
-  if (then.toDateString() === yesterday.toDateString()) return "včera";
-  return then.toLocaleDateString("sk-SK", { day: "numeric", month: "numeric" });
-}
 </script>
 
 <template>
@@ -96,65 +72,25 @@ function relativeTime(iso: string): string {
 
         <template v-if="!sidebarCollapsed">
           <!-- AI-prefilled cases awaiting the doctor's verdict. -->
-          <div class="side-group">
-            <div class="group-head" @click="pendingExpanded = !pendingExpanded">
+          <SideGroup :cases="pending" label="Na posúdenie" empty-text="Žiadne prípady na posúdenie." show-count default-open>
+            <template #icon>
               <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 3" /></svg>
-              Na posúdenie
-              <span v-if="pending.length" class="count">{{ pending.length }}</span>
-              <svg class="chev" :class="{ collapsed: !pendingExpanded }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
-            </div>
-
-            <div v-show="pendingExpanded" class="case-list">
-              <RouterLink v-for="c in pending" :key="c.id" :to="`/cases/${c.id}`" class="case-row">
-                <span class="swatch" :class="`s-${c.decision.color.toLowerCase()}`"></span>
-                <span class="case-meta">
-                  <span class="ttl">{{ caseTitle(c) }}</span>
-                  <span class="sub">{{ relativeTime(c.created_at) }}</span>
-                </span>
-              </RouterLink>
-              <p v-if="!pending.length" class="side-empty">Žiadne prípady na posúdenie.</p>
-            </div>
-          </div>
+            </template>
+          </SideGroup>
 
           <!-- AI-generated cases the doctor has already evaluated. -->
-          <div class="side-group">
-            <div class="group-head" @click="evaluatedExpanded = !evaluatedExpanded">
+          <SideGroup :cases="evaluated" label="Posúdené" empty-text="Žiadne posúdené prípady.">
+            <template #icon>
               <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" /><polyline points="9 12 11 14 15 10" /></svg>
-              Posúdené
-              <svg class="chev" :class="{ collapsed: !evaluatedExpanded }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
-            </div>
-
-            <div v-show="evaluatedExpanded" class="case-list">
-              <RouterLink v-for="c in evaluated" :key="c.id" :to="`/cases/${c.id}`" class="case-row">
-                <span class="swatch" :class="`s-${c.decision.color.toLowerCase()}`"></span>
-                <span class="case-meta">
-                  <span class="ttl">{{ caseTitle(c) }}</span>
-                  <span class="sub">{{ relativeTime(c.created_at) }}</span>
-                </span>
-              </RouterLink>
-              <p v-if="!evaluated.length" class="side-empty">Žiadne posúdené prípady.</p>
-            </div>
-          </div>
+            </template>
+          </SideGroup>
 
           <!-- Cases entered manually by the doctor. -->
-          <div class="side-group">
-            <div class="group-head" @click="ownExpanded = !ownExpanded">
+          <SideGroup :cases="own" label="Vlastné prípady" empty-text="Zatiaľ žiadne prípady." default-open>
+            <template #icon>
               <Stethoscope class="ic" :stroke-width="2.2" />
-              Vlastné prípady
-              <svg class="chev" :class="{ collapsed: !ownExpanded }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
-            </div>
-
-            <div v-show="ownExpanded" class="case-list">
-              <RouterLink v-for="c in own" :key="c.id" :to="`/cases/${c.id}`" class="case-row">
-                <span class="swatch" :class="`s-${c.decision.color.toLowerCase()}`"></span>
-                <span class="case-meta">
-                  <span class="ttl">{{ caseTitle(c) }}</span>
-                  <span class="sub">{{ relativeTime(c.created_at) }}</span>
-                </span>
-              </RouterLink>
-              <p v-if="!own.length" class="side-empty">Zatiaľ žiadne prípady.</p>
-            </div>
-          </div>
+            </template>
+          </SideGroup>
         </template>
       </div>
     </aside>

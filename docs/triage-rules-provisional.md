@@ -132,8 +132,8 @@ oxygen therapy. If `on_oxygen` is `unknown`, none of these three SpO₂ rules fi
 | hypoxemia_on_oxygen | on_oxygen + SpO₂ < 92% | ORANGE |
 | infant_poor_feeding | age < 6 months + poor_feeding | ORANGE |
 | infant_reduced_urine | age < 6 months + reduced_urine_output | ORANGE |
-| severe_pain_score | pain_score ≥ 7 | ORANGE |
-| moderate_pain_score | pain_score 4–6 | YELLOW |
+| severe_pain | pain_score ≥ 7 | ORANGE |
+| moderate_pain | pain_score 4–6 | YELLOW |
 
 ## Explanation contract
 

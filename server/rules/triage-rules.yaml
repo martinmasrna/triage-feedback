@@ -126,7 +126,6 @@ rules:
     all:
       - discriminator: central_cyanosis
 
-  # uses 'pat_circulation_abnormal'
   - name: shock_pat_circ_crt
     label_sk: "Šok: abn. cirkulácia (PAT) + predĺžený kap. návrat"
     color: RED
@@ -136,7 +135,6 @@ rules:
         op: gte
         value: 3
 
-  # uses 'pat_circulation_abnormal'
   - name: shock_pat_circ_hypotension
     label_sk: "Šok: abn. cirkulácia (PAT) + hypotenzia"
     color: RED
@@ -157,7 +155,6 @@ rules:
         op: gte
         value: 38.0
 
-  # uses new discriminator 'on_oxygen'
   - name: severe_hypoxia
     label_sk: "Závažná hypoxia (SpO2 < 90 %) — na vzduchu"
     color: RED
@@ -363,7 +360,6 @@ rules:
         op: lt
         value: 3.0
 
-  # uses 'poor_feeding'
   - name: infant_poor_feeding
     label_sk: "Dojča (<6 mes.) — zlé prijímanie tekutín/stravy"
     color: ORANGE
@@ -374,7 +370,6 @@ rules:
           unit: months
       - discriminator: poor_feeding
 
-  # uses 'reduced_urine_output'
   - name: infant_reduced_urine
     label_sk: "Dojča (<6 mes.) — znížené močenie"
     color: ORANGE
@@ -385,7 +380,7 @@ rules:
           unit: months
       - discriminator: reduced_urine_output
 
-  - name: severe_pain_score
+  - name: severe_pain
     label_sk: "Silná bolesť (skóre 7–10/10)"
     color: ORANGE
     all:
@@ -473,7 +468,7 @@ rules:
     all:
       - discriminator: moderate_resp_distress
 
-  - name: moderate_pain_score
+  - name: moderate_pain
     label_sk: "Stredná bolesť (skóre 4–6/10)"
     color: YELLOW
     all:
