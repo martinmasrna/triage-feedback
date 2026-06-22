@@ -3,6 +3,8 @@
      +/- nudge buttons and a label showing the current value + unit. */
 .age-slider-row {
   @apply flex items-center gap-3;
+  /* Reserve a lane above the track for the floating value bubble. */
+  padding-top: 2.25rem;
 }
 
 .age-slider-btn {
@@ -109,16 +111,30 @@
   cursor: pointer;
 }
 
-.age-slider-value {
-  @apply flex-none text-sm font-semibold text-center;
-  width: 7rem;
-  padding: 0.4rem 0.75rem;
-  border-radius: 0.6rem;
+/* Floating value bubble — tracks the thumb. The inset matches the ticks so its left %
+   maps to the thumb-centre travel (rail minus a thumb radius at each end). */
+.age-slider-bubbles {
+  position: absolute;
+  left: calc(var(--thumb) / 2);
+  right: calc(var(--thumb) / 2);
+  bottom: calc(var(--thumb) / 2 + 0.5rem);
+  height: 0;
+  pointer-events: none;
+}
+.age-slider-bubble {
+  position: absolute;
+  bottom: 0;
+  transform: translateX(-50%);
+  padding: 0.3rem 0.6rem;
+  border-radius: 0.55rem;
   background: var(--color-primary-soft);
   color: var(--color-primary-hover);
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1;
   white-space: nowrap;
 }
-.age-slider-row.invalid .age-slider-value {
+.age-slider-row.invalid .age-slider-bubble {
   color: var(--color-triage-red);
   background: #fef2f2;
 }
@@ -349,6 +365,34 @@
   /* ── Stepper ─────────────────────────────────────────────────────────── */
   .stepper {
     @apply flex items-center gap-2 mb-5;
+  }
+  /* Quiet "start over" affordance — a muted icon pinned to the card's top-right corner,
+     out of the stepper so it doesn't read as part of the progress bar. */
+  .wizard-cards {
+    @apply relative;
+  }
+  .btn-restart {
+    @apply inline-flex items-center justify-center absolute;
+    top: 0.85rem;
+    right: 0.85rem;
+    z-index: 1;
+    width: 2rem;
+    height: 2rem;
+    border: none;
+    border-radius: 9999px;
+    background: none;
+    color: var(--color-muted);
+    cursor: pointer;
+    transition: color 0.15s ease, background 0.15s ease;
+  }
+  .btn-restart:hover {
+    color: var(--color-text);
+    background: rgba(0, 0, 0, 0.05);
+  }
+  .btn-restart svg {
+    width: 1.15rem;
+    height: 1.15rem;
+    flex: none;
   }
   .step {
     @apply flex items-center gap-2 text-sm;
