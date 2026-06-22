@@ -55,14 +55,6 @@ function conditionHolds(c: Condition, input: CaseInput, band: AgeBand): boolean 
   }
 }
 
-/**
- * Evaluate a case against the rule set.
- *
- * A rule fires when ALL its conditions hold. The result color is the highest color among fired
- * rules (most-urgent-finding-wins; findings never sum). The decisive rule is the first fired
- * rule (file order) at that highest color, so YAML ordering encodes tie-break priority.
- * If nothing fires, the default color applies and there is no decisive rule.
- */
 export function evaluate(input: CaseInput, ruleSet: RuleSet): EvaluationResult {
   const band = resolveBand(input.age, ruleSet.age_bands);
 

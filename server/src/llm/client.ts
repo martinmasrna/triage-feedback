@@ -11,20 +11,14 @@ export interface LlmCompletionRequest {
 }
 
 export interface LlmClient {
-  /** Identifier stamped into provenance (e.g. the model name). */
   readonly modelId: string;
-  /** Returns the raw assistant message content (a JSON string when a schema was supplied). */
   complete(req: LlmCompletionRequest): Promise<string>;
 }
 
 export interface LlamaCppOptions {
-  /** Base URL of the llama.cpp server, e.g. "http://127.0.0.1:8080". */
   baseUrl: string;
-  /** Model name to send (llama.cpp usually ignores it; used for the OpenAI-compatible field). */
   model?: string;
-  /** Identifier recorded in provenance. Defaults to `model` or "llama.cpp". */
   modelId?: string;
-  /** Request timeout in ms. Default 60 000. */
   timeoutMs?: number;
 }
 
