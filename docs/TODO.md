@@ -48,6 +48,7 @@ Coverage instrument: the cases improvisation misses. Target ~30: ~9 red-flag flo
 ## 4. Tech debt
 - [x] **Fixed the 2 pre-existing test failures** (not feature-related): `makeApp()` in `server/test/api.test.ts` now passes `adminEnabled` for the “admin endpoints expose the full record” and “export.csv/json” suites, which previously hit the disabled-admin 404. All 89 tests green.
 - [ ] **Consider an `updated_at` / revision count** if post-hoc verdict edits need a fuller audit trail than the current single `verdict_changed` bit.
+- [ ] **Normalize the case store into proper SQL tables — eventually, once the `StoredCase` format is settled.** The store is deliberately a JSON-blob document store for now (canonical `data` column + lifted/generated columns for filtering); see the `db-refactor` branch hybrid cleanup. This is the right call while the schema is still evolving and we have little data — full normalization would sacrifice the lossless longitudinal snapshot and force a migration on every format tweak. Revisit when: (a) the data format has stabilized, AND/OR (b) deep querying into nested data (e.g. "every case where rule X fired", slicing by individual vitals) becomes a primary everyday access pattern. At that point split nested arrays/maps (fired_rules, vitals, discriminators, verdicts, extractions, second_opinions) into child tables.
 
 ## 5. Clinician sign-offs
 - [ ] Clinical sign-off on docs/triage-rules-provisional.md — the one true blocker for real use.
