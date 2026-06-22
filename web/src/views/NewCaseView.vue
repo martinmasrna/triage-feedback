@@ -15,6 +15,7 @@ import type {
   FormOptions,
   TriState,
 } from "../interfaces/types";
+import { RotateCcw } from "lucide-vue-next";
 import { categoryIcon } from "../assets/categoryIcons";
 import CaseSummaryCard from "../components/CaseSummaryCard.vue";
 import ColorChip from "../components/ColorChip.vue";
@@ -57,6 +58,9 @@ const ageSliderLabel = computed(() => {
   return formatAge(value, unit);
 });
 
+// Thumb position as a % of the track — drives the floating value bubble above the thumb.
+const thumbPercent = computed(() => (ageSliderIndex.value / AGE_SLIDER_MAX) * 100);
+
 // The note is read once, on the step 1 → 2 transition, to pre-fill vitals + discriminators. The
 // result is kept and sent back at evaluate time so the original AI read is stored as-is, distinct
 // from whatever the doctor ends up entering.
@@ -81,6 +85,11 @@ const step1Valid = computed(
     form.ageValue > 0 &&
     !!form.complaint_category &&
     (form.complaint_category !== "other" || !!form.complaint_text.trim()),
+);
+
+// Something worth discarding has been entered — drives the "Začať odznova" control.
+const dirty = computed(
+  () => step.value > 1 || form.ageValue !== null || !!form.complaint_category || !!form.note.trim(),
 );
 
 // Clear the "Iné" detail text (and its error) once the doctor picks a different reason.
@@ -288,7 +297,20 @@ function reset() {
 
     <div v-if="error" class="banner banner-error">{{ error }}</div>
 
-    <template v-if="options">
+    <div class="wizard-cards">
+      <!-- Quiet "start over" affordance, pinned to the card's top-right corner. -->
+      <button
+        v-if="dirty"
+        type="button"
+        class="btn-restart"
+        title="Začať odznova"
+        aria-label="Začať odznova"
+        @click="reset"
+      >
+        <RotateCcw :stroke-width="2" />
+      </button>
+
+      <template v-if="options">
       <!-- STEP 1: BASIC INFO -->
       <div v-show="step === 1" class="card">
         <section class="form-section">
@@ -319,6 +341,9 @@ function reset() {
                 <span class="ast" style="--pos: 89.1%">3 roky</span>
                 <span class="ast ast--end">18 r.</span>
               </div>
+              <div class="age-slider-bubbles" aria-hidden="true">
+                <div class="age-slider-bubble" :style="{ left: thumbPercent + '%' }">{{ ageSliderLabel }}</div>
+              </div>
             </div>
             <button
               type="button"
@@ -328,7 +353,6 @@ function reset() {
               :disabled="ageSliderIndex >= AGE_SLIDER_MAX || locked"
               @click="ageSliderIndex = Math.min(AGE_SLIDER_MAX, ageSliderIndex + 1)"
             ></button>
-            <div class="age-slider-value">{{ ageSliderLabel }}</div>
           </div>
           <span v-if="fieldErrors.age" class="field-error">{{ fieldErrors.age }}</span>
         </section>
@@ -454,6 +478,7 @@ function reset() {
         </template>
       </div>
     </template>
+    </div>
   </template>
   </div>
 </template>
